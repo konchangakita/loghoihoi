@@ -174,9 +174,6 @@ frontend/next-app/loghoi/app/.ssh/*
 # Backend output directory
 backend/output/
 
-# Kubernetes secrets (exclude actual secrets, but include template)
-k8s/secret.yaml
-
 # Cursor settings (exclude .cursor directory, but include rules)
 .cursor/
 !.cursor/rules/

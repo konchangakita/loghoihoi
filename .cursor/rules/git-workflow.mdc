@@ -1,0 +1,184 @@
+---
+description: Git Flow方式のブランチ戦略とワークフロー
+globs: ["**/*"]
+alwaysApply: false
+---
+
+# Git Flow ワークフロー
+
+## ブランチ戦略
+
+このプロジェクトは **Git Flow** 方式を使用します。
+
+### メインブランチ
+
+- **`main`**: 本番環境用ブランチ
+  - 常にデプロイ可能な状態を保つ
+  - 直接コミットしない
+  - リリース時のみ`release/*`または`hotfix/*`からマージ
+
+- **`develop`**: 開発用メインブランチ
+  - 開発の統合ブランチ
+  - 機能開発のベースブランチ
+  - 通常の開発作業はこのブランチから分岐
+
+### サポートブランチ
+
+- **`feature/*`**: 機能開発用ブランチ
+  - 命名規則: `feature/機能名`（例: `feature/realtime-log-filter`）
+  - `develop`から分岐
+  - 開発完了後、`develop`にマージ
+  - マージ後は削除
+
+- **`release/*`**: リリース準備用ブランチ
+  - 命名規則: `release/バージョン`（例: `release/v1.2.0`）
+  - `develop`から分岐
+  - バグ修正のみ実施
+  - リリース準備完了後、`main`と`develop`にマージ
+  - マージ後は削除
+
+- **`hotfix/*`**: 緊急修正用ブランチ
+  - 命名規則: `hotfix/修正内容`（例: `hotfix/ssh-connection-fix`）
+  - `main`から分岐
+  - 緊急のバグ修正用
+  - 修正完了後、`main`と`develop`にマージ
+  - マージ後は削除
+
+- **`bugfix/*`**: バグ修正用ブランチ
+  - 命名規則: `bugfix/修正内容`（例: `bugfix/elasticsearch-connection`）
+  - `develop`から分岐
+  - 通常のバグ修正用
+  - 修正完了後、`develop`にマージ
+  - マージ後は削除
+
+## ワークフロー
+
+### 機能開発の流れ
+
+1. `develop`ブランチから`feature/*`ブランチを作成
+   ```bash
+   git checkout develop
+   git pull origin develop
+   git checkout -b feature/新機能名
+   ```
+
+2. 機能開発を実施
+   - 小さなコミットを心がける
+   - コミットメッセージは明確に
+
+3. 開発完了後、`develop`にマージ
+   ```bash
+   git checkout develop
+   git pull origin develop
+   git merge feature/新機能名
+   git push origin develop
+   git branch -d feature/新機能名
+   ```
+
+### リリースの流れ
+
+1. `develop`から`release/*`ブランチを作成
+   ```bash
+   git checkout develop
+   git checkout -b release/v1.2.0
+   ```
+
+2. リリース準備
+   - バージョン番号の更新
+   - ドキュメントの更新
+   - バグ修正のみ実施
+
+3. `main`と`develop`にマージ
+   ```bash
+   git checkout main
+   git merge release/v1.2.0
+   git tag v1.2.0
+   git checkout develop
+   git merge release/v1.2.0
+   ```
+
+### 緊急修正の流れ
+
+1. `main`から`hotfix/*`ブランチを作成
+   ```bash
+   git checkout main
+   git checkout -b hotfix/緊急修正内容
+   ```
+
+2. 修正を実施
+
+3. `main`と`develop`にマージ
+   ```bash
+   git checkout main
+   git merge hotfix/緊急修正内容
+   git tag v1.2.1
+   git checkout develop
+   git merge hotfix/緊急修正内容
+   ```
+
+## コミットメッセージ規約
+
+### フォーマット
+
+```
+<type>: <subject>
+
+<body>
+
+<footer>
+```
+
+### Type
+
+- `feat`: 新機能
+- `fix`: バグ修正
+- `docs`: ドキュメントのみの変更
+- `style`: コードの動作に影響しない変更（フォーマット、セミコロン等）
+- `refactor`: バグ修正や機能追加を伴わないコード改善
+- `perf`: パフォーマンス改善
+- `test`: テストの追加・修正
+- `chore`: ビルドプロセスやツールの変更
+- `ci`: CI/CD設定の変更
+
+### 例
+
+```
+feat: リアルタイムログにフィルタリング機能を追加
+
+- ログレベルによるフィルタリング
+- キーワード検索機能
+- リアルタイム更新に対応
+
+Closes #123
+```
+
+```
+fix: Elasticsearch接続エラーの修正
+
+- 接続タイムアウトの設定を追加
+- リトライロジックの改善
+- エラーハンドリングの強化
+```
+
+## プルリクエスト
+
+### 作成時の注意事項
+
+- タイトルは明確に
+- 変更内容を詳細に記述
+- 関連するIssue番号を記載
+- レビュアーを指定
+
+### マージ前の確認
+
+- コードレビューが完了している
+- テストが通過している
+- ドキュメントが更新されている
+- コミットメッセージが適切
+
+## ブランチ保護ルール
+
+- `main`ブランチは直接プッシュ禁止
+- プルリクエスト必須
+- レビュー必須（最低1名）
+- ステータスチェック必須

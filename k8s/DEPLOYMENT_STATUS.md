@@ -26,7 +26,7 @@
 
 ### 3. **Kubernetesマニフェスト**
 - ✅ ConfigMap (`configmap.yaml`)
-- ✅ Secret (`secret-template.yaml` - テンプレートのみ、実際のSecretは`deploy.sh`で生成)
+- ✅ Secret (実際のSecretは`deploy.sh`で動的に生成)
 - ✅ Elasticsearch Deployment (`elasticsearch-deployment.yaml`)
 - ✅ Services (`services.yaml`)
 - ✅ Backend Deployment (`backend-deployment.yaml`)

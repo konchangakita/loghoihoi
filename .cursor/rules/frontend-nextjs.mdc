@@ -1,0 +1,52 @@
+---
+description: JavaScript/TypeScript（Next.js）フロントエンド開発用ルール
+globs: ["**/frontend/**", "**/next-app/**", "**/*.tsx", "**/*.ts", "**/*.js", "**/*.jsx", "**/package.json"]
+alwaysApply: false
+---
+
+# フロントエンド開発ルール
+
+## JavaScript/TypeScript（Next.js）
+- ESLint、Prettierの設定に従う
+- TypeScriptの型定義を適切に使用する
+- コンポーネントは関数コンポーネントを使用する
+- 状態管理は適切なライブラリ（useState、useContext等）を使用する
+- Next.js 13+ のApp Routerを使用する
+
+## React/Next.js ベストプラクティス
+- コンポーネントの最適化
+- 画像の最適化
+- バンドルサイズの削減
+- レンダリングパフォーマンスの向上
+- Server ComponentsとClient Componentsを適切に使い分ける
+
+## スタイリング
+- Tailwind CSSとDaisyUIを使用
+- レスポンシブデザインを意識する
+- アクセシビリティを考慮する
+- コンポーネントのスタイルは一貫性を保つ
+
+## 状態管理
+- 適切な状態管理ライブラリを選択
+- グローバル状態とローカル状態を適切に使い分ける
+- 状態の正規化を意識する
+- WebSocket接続の状態管理を適切に行う
+
+## パフォーマンス
+- コンポーネントの最適化（memo、useMemo、useCallback）
+- 画像の最適化（next/image）
+- コード分割（dynamic import）
+- レンダリングパフォーマンスの向上
+- 仮想化（VirtualizedList）を適切に使用
+
+## API通信
+- バックエンドAPIとの通信は適切にエラーハンドリング
+- WebSocket接続は適切に管理（接続・切断・再接続）
+- ローディング状態を適切に表示
+- エラーメッセージをユーザーフレンドリーに表示
+
+## ログビューワー
+- リアルタイムログ表示は仮想化を活用
+- 長いログ行は適切に折り返す
+- スクロール位置の管理を適切に行う
+- フィルタリング機能を実装

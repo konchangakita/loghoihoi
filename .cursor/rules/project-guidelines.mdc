@@ -1,0 +1,86 @@
+---
+description: loghoihoiプロジェクトの基本ガイドラインとコーディング規約
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# loghoihoi プロジェクト用 Cursor ルール
+
+## プロジェクト概要
+このプロジェクトは「Nutanixログほいほい」ログ収集・分析システムです。
+- Nutanix環境のログ収集ツール
+- Prism Centralに登録されたクラスターから、CVMのリアルタイムログ、Syslog、ログファイル収集
+- FastAPI、Next.js、Elasticsearch、Docker、Kubernetes等の技術スタック
+
+## コーディング規約
+
+### 全般的なルール
+- コードは読みやすく、保守しやすいように書く
+- 適切なコメントを記述する（日本語コメント可）
+- 変数名や関数名は意味が分かりやすいものにする
+- 一貫したインデント（スペース4つ）を使用する
+- 型ヒントを積極的に使用する（Python）
+- TypeScriptの型定義を適切に使用する（TypeScript）
+
+### コミットメッセージ
+- 日本語で記述する
+- 変更内容を明確に表現する
+- 例: `feat: ログ収集機能の追加`
+- 例: `fix: Elasticsearch接続エラーの修正`
+- 例: `docs: READMEの更新`
+- 詳細は`git-workflow.mdc`を参照
+
+### ブランチ戦略
+- **Git Flow方式**を使用
+- `main`: 本番環境用
+- `develop`: 開発用メインブランチ
+- `feature/*`: 機能開発用
+- `bugfix/*`: バグ修正用
+- `hotfix/*`: 緊急修正用
+- `release/*`: リリース準備用
+- 詳細は`git-workflow.mdc`を参照
+
+### Tidy First原則
+- 機能追加やバグ修正の前に、まずコードを整理する
+- 小さな変更を積み重ねる
+- テストを書いてから変更する
+- 詳細は`tidy-first.mdc`を参照
+
+## ディレクトリ構成
+
+```
+loghoihoi/
+├── backend/          # FastAPI バックエンド
+│   ├── fastapi_app/  # FastAPIアプリケーション
+│   ├── core/         # コアロジック（SSH接続、ログ収集）
+│   └── config/       # 設定ファイル
+├── frontend/         # Next.js フロントエンド
+│   └── next-app/loghoi/
+├── shared/           # 共通ライブラリ
+│   └── gateways/     # 共通Gateway（Elasticsearch、Prism API）
+├── syslog/           # Syslog サーバー
+├── k8s/              # Kubernetes マニフェスト
+├── config/.ssh/      # SSH鍵（永続化、README.mdは含める）
+├── scripts/          # ユーティリティスクリプト
+└── docs/             # ドキュメント
+```
+
+## 注意事項
+
+### セキュリティ
+- SSH秘密鍵は絶対にGitにコミットしない
+- 機密情報は環境変数またはKubernetes Secretで管理
+- `.env`ファイルは`.gitignore`で除外
+
+### 開発環境と本番環境
+- 開発環境: `docker-compose.yml`を使用
+- 本番環境: Kubernetesマニフェスト（`k8s/`ディレクトリ）を使用
+- 開発環境用の`dockerfile`（小文字）と本番環境用の`Dockerfile.k8s`を区別する
+
+### SSH鍵管理
+- SSH鍵は`config/.ssh/`ディレクトリに保存
+- 秘密鍵（`loghoi-key`）は自動生成され、Gitには含めない
+- 公開鍵（`loghoi-key.pub`）もGitには含めない
+- `config/.ssh/README.md`はGitに含める
+
+このルールに従って、高品質で保守しやすいコードを書くことを心がけてください。

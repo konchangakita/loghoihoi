@@ -1,0 +1,73 @@
+---
+description: Docker/Kubernetes開発・デプロイ用ルール
+globs: ["**/dockerfile", "**/Dockerfile*", "**/docker-compose*.yml", "**/k8s/**/*.yaml", "**/.dockerignore"]
+alwaysApply: false
+---
+
+# Docker/Kubernetes 開発ルール
+
+## Docker
+
+### 開発環境と本番環境の区別
+- **開発環境**: `dockerfile`（小文字）を使用
+  - `backend/dockerfile`
+  - `frontend/dockerfile`
+  - `syslog/dockerfile`
+  - docker-compose経由での開発・メンテナンス用
+  - **重要**: これらのファイルは絶対に削除してはいけない
+
+- **本番環境**: `Dockerfile.k8s`を使用
+  - `backend/Dockerfile.k8s`
+  - `frontend/next-app/loghoi/Dockerfile.k8s`
+  - `syslog/Dockerfile.k8s`
+  - Kubernetes環境へのデプロイ用
+
+### Dockerfileのベストプラクティス
+- マルチステージビルドを活用
+- キャッシュを効率的に使用
+- セキュリティを考慮（非rootユーザー、最小権限）
+- イメージサイズを最小化
+- `.dockerignore`を適切に設定
+
+### docker-compose
+- 開発環境での使用を想定
+- ボリュームマウントでホットリロードを実現
+- 環境変数は`.env`ファイルで管理（Gitには含めない）
+
+## Kubernetes
+
+### マニフェストファイル
+- `k8s/`ディレクトリに配置
+- 命名規則に従う（`*-deployment.yaml`、`*-service.yaml`等）
+- 環境変数はConfigMapまたはSecretで管理
+- リソース制限を適切に設定
+
+### Secret管理
+- 機密情報は`k8s/secret.yaml`で管理
+- `k8s/secret-template.yaml`をテンプレートとして使用
+- 実際の機密情報はGitにコミットしない
+- Base64エンコードされた値を使用
+
+### デプロイメント
+- `k8s/deploy.sh`スクリプトを使用
+- 名前空間（namespace）を適切に設定
+- 永続ボリューム（PVC）を適切に設定
+- ヘルスチェックを実装
+
+### ストレージ
+- ElasticsearchデータはPVCで永続化
+- バックエンド出力ディレクトリもPVCで永続化
+- ストレージクラスを適切に設定
+
+## セキュリティ
+- 非rootユーザーでコンテナを実行
+- 最小権限の原則に従う
+- 機密情報はSecretで管理
+- ネットワークポリシーを適切に設定
+- イメージの脆弱性スキャンを実施
+
+## パフォーマンス
+- リソース制限（requests/limits）を適切に設定
+- 水平ポッドオートスケーリング（HPA）を検討
+- レプリカ数を適切に設定
+- ヘルスチェックの間隔を最適化
