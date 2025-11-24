@@ -135,14 +135,17 @@ LogHoihoiをデプロイするために必要な最小リソース：
 | `configmap.yaml` | アプリケーション設定 |
 | `nginx-config.yaml` | Nginx設定 |
 | `elasticsearch-deployment.yaml` | Elasticsearch Deployment |
+| `elasticsearch-pvc.yaml` | Elasticsearch PVC（参照用） |
 | `backend-deployment.yaml` | Backend Deployment |
+| `backend-output-pvc.yaml` | Backend PVC（参照用） |
 | `frontend-deployment.yaml` | Frontend Deployment |
 | `kibana-deployment.yaml` | Kibana Deployment |
 | `syslog-deployment.yaml` | Syslog Deployment |
 | `services.yaml` | 全Service定義 |
 | `ingress.yaml` | Ingress設定 |
+| `hpa.yaml` | HPA設定（オプション） |
 
-**注意**: PVC、Namespace、Secretは`deploy.sh`で動的生成されます。
+**注意**: PVC YAMLファイルは参照用です。実際のPVCは`deploy.sh`で動的生成されます。
 
 ---
 

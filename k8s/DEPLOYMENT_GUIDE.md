@@ -372,6 +372,12 @@ kubectl apply -f frontend-deployment.yaml
 kubectl apply -f ingress.yaml
 ```
 
+### 10. オプション: HPAの設定
+
+```bash
+kubectl apply -f hpa.yaml
+```
+
 ---
 
 ## デプロイ後の確認
@@ -662,6 +668,32 @@ kubectl scale deployment loghoi-frontend -n loghoihoi --replicas=3
 # ReadWriteMany対応StorageClassでデプロイした場合のみ
 kubectl scale deployment loghoi-backend -n loghoihoi --replicas=3
 ```
+
+### HPA（Horizontal Pod Autoscaler）
+
+HPAは、CPU/メモリの使用率に基づいてPod数を自動的に増減させる機能です。負荷に応じて自動的にスケールし、パフォーマンスとコストのバランスを最適化します。
+
+**設定内容**:
+- **バックエンド**: 最小2Pod、最大10Pod（CPU 70% / メモリ 80%でスケールアップ）
+- **フロントエンド**: 最小2Pod、最大5Pod（CPU 70% / メモリ 80%でスケールアップ）
+
+**使用方法**:
+```bash
+# HPAを適用
+kubectl apply -f hpa.yaml
+
+# HPA状態確認
+kubectl get hpa -n loghoihoi
+kubectl describe hpa loghoi-backend-hpa -n loghoihoi
+kubectl describe hpa loghoi-frontend-hpa -n loghoihoi
+```
+
+**注意事項**:
+- 現在の設定ではBackendとElasticsearchはReadWriteOnce（RWO）のPVCを使用しているため、複数Podで同じストレージを共有できません
+- HPAを有効にするには、ReadWriteMany（RWX）対応のStorageClassが必要です
+- CPU/メモリのメトリクスが収集できる環境が必要です（通常はMetrics Serverが必要）
+
+詳細は **[KUBERNETES_SPEC.md - スケーリング](./KUBERNETES_SPEC.md#スケーリング)** を参照してください。
 
 ---
 

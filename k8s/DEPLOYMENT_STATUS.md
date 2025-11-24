@@ -26,16 +26,19 @@
 
 ### 3. **Kubernetesマニフェスト**
 - ✅ ConfigMap (`configmap.yaml`)
-- ✅ Secret (実際のSecretは`deploy.sh`で動的に生成)
+- ✅ Secret (`secret-template.yaml`)
+- ✅ Elasticsearch PVC (`elasticsearch-pvc.yaml`)
 - ✅ Elasticsearch Deployment (`elasticsearch-deployment.yaml`)
 - ✅ Services (`services.yaml`)
 - ✅ Backend Deployment (`backend-deployment.yaml`)
 - ✅ Frontend Deployment (`frontend-deployment.yaml`)
 - ✅ Ingress (`ingress.yaml`)
+- ✅ HPA (`hpa.yaml`)
 
 ### 4. **自動化スクリプト**
 - ✅ `build-and-push.sh`: Dockerイメージビルド
 - ✅ `deploy.sh`: 自動デプロイ
+- ✅ `load-images-to-nodes.sh`: イメージ配布（作成済み、未実行）
 
 ### 5. **ドキュメント**
 - ✅ `README.md`: デプロイガイド

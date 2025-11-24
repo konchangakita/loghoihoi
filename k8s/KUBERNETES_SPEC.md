@@ -502,6 +502,9 @@ kubectl apply -f frontend-deployment.yaml
 
 # 7. Ingress
 kubectl apply -f ingress.yaml
+
+# 8. HPA (オプション)
+kubectl apply -f hpa.yaml
 ```
 
 ---
@@ -542,10 +545,42 @@ kubectl logs -n loghoihoi -l app=kibana,component=kibana -f
 
 ### スケーリング
 
+#### 手動スケーリング
+
 ```bash
 # 手動スケーリング
 kubectl scale deployment loghoi-backend -n loghoihoi --replicas=3
 ```
+
+#### HPA（Horizontal Pod Autoscaler）による自動スケーリング
+
+HPAは、CPU/メモリの使用率に基づいてPod数を自動的に増減させる機能です。
+
+**設定内容**:
+- **バックエンド**: 最小2Pod、最大10Pod
+  - CPU使用率70%超、またはメモリ使用率80%超でスケールアップ
+  - 60秒ごとに最大50%増、または最大2Pod追加（より大きい方を採用）
+  - 300秒の安定化期間後、60秒ごとに最大10%減
+- **フロントエンド**: 最小2Pod、最大5Pod
+  - CPU使用率70%超、またはメモリ使用率80%超でスケールアップ
+  - 60秒ごとに最大50%増、または最大1Pod追加（より大きい方を採用）
+  - 300秒の安定化期間後、60秒ごとに最大10%減
+
+**使用方法**:
+```bash
+# HPAを適用
+kubectl apply -f hpa.yaml
+
+# HPA状態確認
+kubectl get hpa -n loghoihoi
+kubectl describe hpa loghoi-backend-hpa -n loghoihoi
+kubectl describe hpa loghoi-frontend-hpa -n loghoihoi
+```
+
+**注意事項**:
+- 現在の設定ではBackendとElasticsearchはReadWriteOnce（RWO）のPVCを使用しているため、複数Podで同じストレージを共有できません
+- HPAを有効にするには、ReadWriteMany（RWX）対応のStorageClassが必要です
+- CPU/メモリのメトリクスが収集できる環境が必要です（通常はMetrics Serverが必要）
 
 ---
 
@@ -557,7 +592,7 @@ kubectl scale deployment loghoi-backend -n loghoihoi --replicas=3
 | **Dockerfile** | `dockerfile` (小文字) | `Dockerfile.k8s` |
 | **ネットワーク** | Docker内部ネットワーク | Ingress + Service |
 | **ストレージ** | Dockerボリューム | PVC (Nutanix CSI) |
-| **スケーリング** | 手動 | 手動（kubectl scale） |
+| **スケーリング** | 手動 | HPA (自動) |
 | **ヘルスチェック** | Docker Healthcheck | Liveness/Readiness Probe |
 | **設定** | `.env` ファイル | ConfigMap + Secret |
 | **ログ可視化** | なし | Kibana (http://10.55.23.41/kibana) |
