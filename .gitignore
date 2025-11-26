@@ -184,6 +184,6 @@ elastic/es-data/nodes/0
 # Backend output directory
 backend/output/
 
-# Cursor settings (exclude .cursor directory, but include rules)
-.cursor/
-!.cursor/rules/
+# Cursor settings (develop中は.gitignoreから除外設定をコメントアウトしておく)
+# .cursor/
+# !.cursor/rules/

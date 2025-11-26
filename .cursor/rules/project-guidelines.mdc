@@ -30,15 +30,27 @@ alwaysApply: true
 - 例: `docs: READMEの更新`
 - 詳細は`git-workflow.mdc`を参照
 
-### ブランチ戦略
-- **Git Flow方式**を使用
-- `main`: 本番環境用
+### ブランチ戦略（loghoihoi専用）
+- **Git Flow方式**をベースにしたシンプル運用とする
+- `main`: リリース用ブランチ（公開可能な状態のみ）
+  - ブログやREADMEから参照される「正」のブランチ
+  - 原則として直接コミットせず、`develop` からのマージで更新する（緊急時のみ`hotfix/*`から直接マージ可）
 - `develop`: 開発用メインブランチ
-- `feature/*`: 機能開発用
-- `bugfix/*`: バグ修正用
-- `hotfix/*`: 緊急修正用
-- `release/*`: リリース準備用
-- 詳細は`git-workflow.mdc`を参照
+  - 日常開発のベースブランチ
+  - すべての新機能・改善・バグ修正はまずここに集約する
+- `feature/*`: 機能開発用（例: `feature/hpa-support`）
+  - `develop` から分岐し、完了後は `develop` にマージして削除
+- `bugfix/*`: 通常のバグ修正用
+  - `develop` から分岐し、完了後は `develop` にマージして削除
+- `hotfix/*`: 本番（`main`）不具合の緊急修正用
+  - `main` から分岐し、完了後に `main` と `develop` の両方にマージ
+- `release/*`: 必要になった場合のみ使用（将来、リリース前の検証を厳密にしたくなったときに導入）
+- 詳細なワークフローは `git-workflow.mdc` を参照
+
+#### blog-loghoi との関係
+- `blog-loghoi` リポジトリは **過去のブログ記事対応コードのアーカイブ** として塩漬けにする
+- 今後の開発・リリースは **`loghoihoi` リポジトリを正とする**
+- ブログ記事から参照するコードも、基本的には `loghoihoi` の `main` ブランチ（必要に応じてタグ）を参照する
 
 ### Tidy First原則
 - 機能追加やバグ修正の前に、まずコードを整理する
