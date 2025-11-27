@@ -1,10 +1,6 @@
-# ⚠️ このファイルは参照用です
-# 実際のPVCは deploy.sh で環境変数 STORAGE_CLASS を使用して動的生成されます
-#
-# デフォルト: STORAGE_CLASS=manual (HostPath)
-# カスタム: STORAGE_CLASS=your-storage-class
-#
-# 以下は参考用のマニフェスト定義です
+# Helm Chartでは、このテンプレートがレンダリングされてPVCが作成されます
+# storageClassは values.yaml で指定可能（デフォルト: manual）
+# カスタムStorageClassを使用する場合は、helm install時に -f values-custom.yaml などで上書き
 
 apiVersion: v1
 kind: PersistentVolumeClaim
