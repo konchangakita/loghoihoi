@@ -1,0 +1,26 @@
+# Default values for loghoihoi
+# This is a YAML-formatted file.
+
+# イメージ設定
+image:
+  backend:
+    repository: ghcr.io/konchangakita/loghoi-backend
+    tag: v1.1.1
+    pullPolicy: Always
+  frontend:
+    repository: ghcr.io/konchangakita/loghoi-frontend
+    tag: v1.1.1
+    pullPolicy: Always
+
+# Ingress設定
+ingress:
+  enabled: true
+  className: kommander-traefik
+  # host: loghoihoi.example.com  # 必要に応じて設定
+
+# ストレージ設定
+storageClass: manual  # デフォルトは manual (HostPath)
+
+# Namespace（固定）
+namespace: loghoihoi
+

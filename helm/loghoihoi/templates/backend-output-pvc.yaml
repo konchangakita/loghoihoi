@@ -1,0 +1,26 @@
+# ⚠️ このファイルは参照用です
+# 実際のPVCは deploy.sh で環境変数 STORAGE_CLASS を使用して動的生成されます
+#
+# デフォルト: STORAGE_CLASS=manual (HostPath)
+# カスタム: STORAGE_CLASS=your-storage-class
+#
+# 以下は参考用のマニフェスト定義です
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loghoi-backend-output
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: loghoi
+    component: backend-storage
+spec:
+  accessModes:
+    - ReadWriteOnce  # Most CSI drivers support RWO
+  {{- if .Values.storageClass }}
+  storageClassName: {{ .Values.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: 10Gi  # ログファイル保存用に10GB
+
