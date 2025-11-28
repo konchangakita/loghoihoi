@@ -178,6 +178,24 @@ ssh-rsa AAAAB3NzaC1yc2E... loghoi@kubernetes
 公開鍵の登録は完了しましたか？ (y/N):
 ```
 
+### デプロイ後のアクセス情報確認
+
+デプロイ完了後、以下のコマンドでWebブラウザでアクセスするIPアドレスを確認できます：
+
+```bash
+# Ingress IPアドレスを取得して表示
+INGRESS_IP=$(kubectl get ingress loghoi-ingress -n loghoihoi -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🌐 WebブラウザでアクセスするURL"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "フロントエンド:     http://${INGRESS_IP}/"
+echo "バックエンドAPI:    http://${INGRESS_IP}/api/"
+echo "API ドキュメント:   http://${INGRESS_IP}/docs"
+echo "Kibana:            http://${INGRESS_IP}/kibana"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+```
+
 ---
 
 ## 詳細なデプロイ手順
@@ -460,7 +478,15 @@ kubectl logs -n loghoihoi -l app=elasticsearch --tail=50
 # Ingress IPアドレスを取得
 INGRESS_IP=$(kubectl get ingress loghoi-ingress -n loghoihoi -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-echo "Application URL: http://${INGRESS_IP}"
+# WebブラウザでアクセスするIPアドレスを表示
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🌐 WebブラウザでアクセスするURL"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "フロントエンド:     http://${INGRESS_IP}/"
+echo "バックエンドAPI:    http://${INGRESS_IP}/api/"
+echo "API ドキュメント:   http://${INGRESS_IP}/docs"
+echo "Kibana:            http://${INGRESS_IP}/kibana"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ```
 
 ブラウザで以下にアクセス:

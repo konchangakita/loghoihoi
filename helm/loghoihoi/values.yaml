@@ -24,3 +24,17 @@ storageClass: manual  # デフォルトは manual (HostPath)
 # Namespace（固定）
 namespace: loghoihoi
 
+# SSH鍵設定
+sshKeys:
+  # Secretを作成するかどうか
+  create: false  # デフォルトは false（手動でSecretを作成）
+  
+  # 既存のSecretを使用する場合
+  existingSecret: ""  # 例: "loghoi-secrets"
+  
+  # 新しいSecretを作成する場合（create: true の場合）
+  # 注意: これらの値は base64 エンコードされた文字列を期待します
+  # または、helm install時に --set で指定してください
+  privateKey: ""  # base64エンコードされた秘密鍵
+  publicKey: ""    # base64エンコードされた公開鍵
+
