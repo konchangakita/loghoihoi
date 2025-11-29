@@ -9,7 +9,7 @@ metadata:
 data:
   # アプリケーション設定
   APP_NAME: "LogHoi"
-  APP_VERSION: "v1.0.0"
+  APP_VERSION: "{{ .Chart.AppVersion }}"
   DEBUG: "false"
   
   # バックエンド設定

@@ -177,3 +177,6 @@ echo -e "  kubectl get pods -n ${NAMESPACE}"
 echo -e "  kubectl get svc,ingress -n ${NAMESPACE}"
 echo ""
 
+
+
+

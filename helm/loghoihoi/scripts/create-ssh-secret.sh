@@ -130,3 +130,6 @@ echo -e "${BLUE}次のステップ:${NC}"
 echo -e "  helm install loghoihoi ./helm/loghoihoi --namespace ${NAMESPACE}"
 echo ""
 
+
+
+
