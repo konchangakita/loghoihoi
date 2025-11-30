@@ -672,6 +672,93 @@ async def get_cvmlist_api(cluster_name: Dict[str, str]) -> Dict[str, Any]:
         print(f"❌ CVM一覧取得エラー: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/ssh-key/setup")
+async def ssh_key_setup() -> Dict[str, Any]:
+    """
+    SSH鍵セットアップAPI
+    
+    鍵が存在する場合はそのまま返し、存在しない場合は生成する。
+    アプリ起動時に自動的に呼び出される。
+    
+    Response:
+        {
+            "status": "exists" | "generated",
+            "data": {
+                "public_key": "ssh-rsa AAAAB3...",
+                "message": "SSH鍵が既に存在します" | "SSH鍵を生成しました"
+            }
+        }
+    """
+    import subprocess
+    import stat
+    
+    # SSH鍵のパスを取得（環境変数またはデフォルト値）
+    key_file = os.getenv("SSH_KEY_PATH", "/app/config/.ssh/loghoi-key")
+    pub_key_file = f"{key_file}.pub"
+    key_dir = os.path.dirname(key_file)
+    
+    # 鍵が既に存在する場合
+    if os.path.exists(key_file) and os.path.exists(pub_key_file):
+        try:
+            with open(pub_key_file, 'r') as f:
+                public_key = f.read().strip()
+            return {
+                "status": "exists",
+                "data": {
+                    "public_key": public_key,
+                    "message": "SSH鍵が既に存在します"
+                }
+            }
+        except Exception as e:
+            # 読み込みエラーの場合は再生成
+            print(f"⚠️ SSH鍵の読み込みエラー: {e}。再生成します。")
+    
+    # 鍵が存在しない場合は生成
+    try:
+        # ディレクトリ作成
+        os.makedirs(key_dir, mode=0o700, exist_ok=True)
+        
+        # SSH鍵生成（subprocessでssh-keygenを実行）
+        result = subprocess.run(
+            [
+                "ssh-keygen",
+                "-t", "rsa",
+                "-b", "4096",
+                "-f", key_file,
+                "-N", "",  # パスフレーズなし
+                "-C", "loghoi@kubernetes"
+            ],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        # 権限設定
+        os.chmod(key_file, stat.S_IRUSR | stat.S_IWUSR)  # 600
+        os.chmod(pub_key_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)  # 644
+        
+        # 公開鍵を読み込んで返す
+        with open(pub_key_file, 'r') as f:
+            public_key = f.read().strip()
+        
+        print(f"✓ SSH鍵を生成しました: {key_file}")
+        
+        return {
+            "status": "generated",
+            "data": {
+                "public_key": public_key,
+                "message": "SSH鍵を生成しました"
+            }
+        }
+    except subprocess.CalledProcessError as e:
+        error_msg = f"SSH鍵の生成に失敗しました: {e.stderr}"
+        print(f"❌ {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
+    except Exception as e:
+        error_msg = f"SSH鍵の生成に失敗しました: {str(e)}"
+        print(f"❌ {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
+
 @app.get("/api/sshkey")
 async def get_ssh_public_key() -> Dict[str, Any]:
     """
