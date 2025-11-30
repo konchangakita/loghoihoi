@@ -1,0 +1,16 @@
+apiVersion: v2
+name: loghoihoi
+description: Nutanixログほいほい - ログ収集・分析システムのHelm Chart
+type: application
+version: 0.1.0
+appVersion: v1.1.1
+keywords:
+  - nutanix
+  - log
+  - elasticsearch
+  - kibana
+  - syslog
+maintainers:
+  - name: konchangakita
+home: https://github.com/konchangakita/loghoihoi
+

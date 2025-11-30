@@ -1,0 +1,22 @@
+# Helm Chartでは、このテンプレートがレンダリングされてPVCが作成されます
+# storageClassは values.yaml で指定可能（デフォルト: manual）
+# カスタムStorageClassを使用する場合は、helm install時に -f values-custom.yaml などで上書き
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loghoi-backend-output
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: loghoi
+    component: backend-storage
+spec:
+  accessModes:
+    - ReadWriteOnce  # Most CSI drivers support RWO
+  {{- if .Values.storageClass }}
+  storageClassName: {{ .Values.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: 10Gi  # ログファイル保存用に10GB
+
