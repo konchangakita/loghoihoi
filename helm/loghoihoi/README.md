@@ -68,17 +68,7 @@ kubectl create secret generic loghoi-secrets \
   --from-file=SSH_PUBLIC_KEY=/path/to/public/key.pub
 ```
 
-#### 方法B-2: ヘルパースクリプトを使用する場合
-
-```bash
-# SSH鍵を自動生成または既存の鍵を使用
-export KUBECONFIG=/path/to/kubeconfig.conf
-./helm/loghoihoi/scripts/create-ssh-secret.sh
-```
-
-**注意**: SSH鍵がroot所有の場合、スクリプトが読み取れない可能性があります。その場合は、方法Aを使用してください。
-
-#### 方法B-3: 新規にSSH鍵を生成する場合
+#### 方法B-2: 新規にSSH鍵を生成する場合
 
 ```bash
 # SSH鍵を生成
