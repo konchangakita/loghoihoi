@@ -40,7 +40,7 @@ KUBECONFIG=/path/to/your/kubeconfig.conf ./deploy.sh
 # Ingress経由でアクセス（環境に応じて設定）
 ```
 
-詳細なインストール手順は **[Helm Chart インストールガイド](./HELM_INSTALLATION_GUIDE.md)** を参照してください。
+詳細なインストール手順は **[Helm Chart インストールガイド](./helm/loghoihoi/INSTALLATION_GUIDE.md)** を参照してください。
 
 kubectlを使用した手動デプロイ手順は **[Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md)** を参照してください。
 
@@ -55,7 +55,7 @@ kubectlを使用した手動デプロイ手順は **[Kubernetesデプロイメ�
 
 | ドキュメント | 説明 |
 |---|---|
-| [Helm Chart インストールガイド](./HELM_INSTALLATION_GUIDE.md) | **Helm Chartを使用したインストール手順（推奨）**<br>- Namespace自動作成<br>- SSH鍵自動生成<br>- インストール確認<br>- トラブルシューティング |
+| [Helm Chart インストールガイド](./helm/loghoihoi/INSTALLATION_GUIDE.md) | **Helm Chartを使用したインストール手順（推奨）**<br>- Namespace自動作成<br>- SSH鍵自動生成<br>- インストール確認<br>- トラブルシューティング |
 | [Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md) | **kubectlを使用した手動デプロイ手順**<br>- クイックスタート<br>- 詳細な手動デプロイ手順<br>- トラブルシューティング<br>- 環境別設定 |
 
 ### 機能仕様書

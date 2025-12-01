@@ -116,7 +116,7 @@ kubectl get pvc -n loghoihoi
 
 ```bash
 # Helmリリースの状態確認
-helm status loghoihoi -n loghoihoi 2>/dev/null || helm status loghoihoi
+helm status loghoihoi
 
 # 期待される出力:
 # NAME: loghoihoi
@@ -131,11 +131,8 @@ helm status loghoihoi -n loghoihoi 2>/dev/null || helm status loghoihoi
 ### Ingress IPアドレスの取得
 
 ```bash
-# Ingress IPアドレスを取得
-INGRESS_IP=$(kubectl get ingress -n loghoihoi -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
-
-# IPアドレスを表示
-echo "Ingress IP: ${INGRESS_IP}"
+# Ingress IPアドレスを取得して表示
+kubectl get ingress -n loghoihoi -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'
 ```
 
 ### すべてのアクセスURLを一括表示
@@ -144,15 +141,13 @@ echo "Ingress IP: ${INGRESS_IP}"
 # Ingress IPを取得
 INGRESS_IP=$(kubectl get ingress -n loghoihoi -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
-# すべてのURLを表示
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🌐 WebブラウザでアクセスするURL"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "フロントエンド:     http://${INGRESS_IP}/"
-echo "バックエンドAPI:    http://${INGRESS_IP}/api/"
-echo "API ドキュメント:   http://${INGRESS_IP}/docs"
-echo "API ドキュメント:   http://${INGRESS_IP}/redoc"
-echo "Kibana:            http://${INGRESS_IP}/kibana"
+echo "フロントエンド:     https://${INGRESS_IP}/"
+echo "API ドキュメント:   https://${INGRESS_IP}/docs"
+echo "API ドキュメント:   https://${INGRESS_IP}/redoc"
+echo "Kibana:            https://${INGRESS_IP}/kibana"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ```
 
