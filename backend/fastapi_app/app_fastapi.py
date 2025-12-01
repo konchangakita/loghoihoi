@@ -561,8 +561,12 @@ async def index():
 @app.get("/redoc", response_class=HTMLResponse)
 async def redoc(request: Request):
     """ReDoc API Documentation (カスタムエンドポイント - CDN URL修正版)"""
-    # リクエストからホスト情報を取得
-    base_url = str(request.base_url).rstrip('/')
+    # リクエストからホスト情報を取得（X-Forwarded-Protoヘッダーを確認してHTTPSを検出）
+    scheme = request.headers.get("X-Forwarded-Proto", request.url.scheme)
+    if scheme == "https" or request.url.scheme == "https":
+        base_url = f"https://{request.url.netloc}"
+    else:
+        base_url = str(request.base_url).rstrip('/')
     
     # 正しいCDN URLを使用（@nextタグを削除）
     redoc_html = f"""<!DOCTYPE html>
