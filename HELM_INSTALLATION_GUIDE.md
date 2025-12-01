@@ -26,41 +26,7 @@ cd /home/nutanix/konchangakita/loghoihoi
 
 ---
 
-## 1. クリーンアップ（既存インストールがある場合）
-
-### 完全クリーンアップ（Namespaceごと削除）
-
-```bash
-# Helmリリースを削除（default Namespaceに存在する場合）
-helm uninstall loghoihoi 2>/dev/null || echo "Helmリリースが見つかりません"
-
-# Namespaceごと削除（すべてのリソースが削除される）
-kubectl delete namespace loghoihoi --wait=true --timeout=300s
-
-# Namespaceが完全に削除されるまで待機
-while kubectl get namespace loghoihoi &>/dev/null 2>&1; do
-  echo "Namespace削除待機中..."
-  sleep 5
-done
-echo "✓ Namespace削除完了"
-```
-
-### 部分クリーンアップ（Namespaceは残す）
-
-```bash
-# Helmリリースを削除
-helm uninstall loghoihoi -n loghoihoi 2>/dev/null || helm uninstall loghoihoi 2>/dev/null
-
-# 特定のリソースのみ削除
-kubectl delete deployment -n loghoihoi --all
-kubectl delete service -n loghoihoi --all
-kubectl delete ingress -n loghoihoi --all
-kubectl delete pvc -n loghoihoi --all
-```
-
----
-
-## 2. インストール
+## 1. インストール
 
 ### デフォルトインストール（loghoihoi Namespace）
 
@@ -85,7 +51,7 @@ helm install loghoihoi ./helm/loghoihoi \
 
 ---
 
-## 3. インストール確認
+## 2. インストール確認
 
 ### Podの状態確認
 
@@ -160,7 +126,7 @@ helm status loghoihoi -n loghoihoi 2>/dev/null || helm status loghoihoi
 
 ---
 
-## 4. アクセスURLの確認
+## 3. アクセスURLの確認
 
 ### Ingress IPアドレスの取得
 
@@ -208,7 +174,7 @@ echo "OpenAPI JSON: http://${INGRESS_IP}/openapi.json"
 
 ---
 
-## 5. SSH鍵の確認
+## 4. SSH鍵の確認
 
 ### SSH鍵ディレクトリの確認
 
@@ -329,7 +295,7 @@ fi
 
 ---
 
-## 6. トラブルシューティング
+## 5. トラブルシューティング
 
 ### Podが起動しない場合
 
@@ -379,7 +345,7 @@ kubectl describe pvc -n loghoihoi
 
 ---
 
-## 7. アップグレード
+## 6. アップグレード
 
 既存のインストールをアップグレードする場合:
 
@@ -389,6 +355,40 @@ helm upgrade loghoihoi ./helm/loghoihoi --wait --timeout=10m
 
 # アップグレード状態の確認
 helm status loghoihoi -n loghoihoi 2>/dev/null || helm status loghoihoi
+```
+
+---
+
+## 7. クリーンアップ（既存インストールがある場合）
+
+### 完全クリーンアップ（Namespaceごと削除）
+
+```bash
+# Helmリリースを削除（default Namespaceに存在する場合）
+helm uninstall loghoihoi 2>/dev/null || echo "Helmリリースが見つかりません"
+
+# Namespaceごと削除（すべてのリソースが削除される）
+kubectl delete namespace loghoihoi --wait=true --timeout=300s
+
+# Namespaceが完全に削除されるまで待機
+while kubectl get namespace loghoihoi &>/dev/null 2>&1; do
+  echo "Namespace削除待機中..."
+  sleep 5
+done
+echo "✓ Namespace削除完了"
+```
+
+### 部分クリーンアップ（Namespaceは残す）
+
+```bash
+# Helmリリースを削除
+helm uninstall loghoihoi -n loghoihoi 2>/dev/null || helm uninstall loghoihoi 2>/dev/null
+
+# 特定のリソースのみ削除
+kubectl delete deployment -n loghoihoi --all
+kubectl delete service -n loghoihoi --all
+kubectl delete ingress -n loghoihoi --all
+kubectl delete pvc -n loghoihoi --all
 ```
 
 ---
@@ -411,13 +411,13 @@ kubectl delete namespace loghoihoi --wait=true --timeout=300s
 
 このガイドで以下を確認できます：
 
-1. ✅ 完全クリーンアップ
-2. ✅ Helm Chartでのインストール
-3. ✅ インストール状態の確認
-4. ✅ アクセスURLの確認
-5. ✅ SSH鍵の生成と確認
-6. ✅ 永続化の確認（Pod再起動後も保持）
-7. ✅ トラブルシューティング
+1. ✅ Helm Chartでのインストール
+2. ✅ インストール状態の確認
+3. ✅ アクセスURLの確認
+4. ✅ SSH鍵の生成と確認
+5. ✅ 永続化の確認（Pod再起動後も保持）
+6. ✅ トラブルシューティング
+7. ✅ アップグレードとクリーンアップ
 
 ---
 
