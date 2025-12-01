@@ -40,7 +40,9 @@ KUBECONFIG=/path/to/your/kubeconfig.conf ./deploy.sh
 # Ingress経由でアクセス（環境に応じて設定）
 ```
 
-詳細なデプロイ手順は **[Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md)** を参照してください。
+詳細なインストール手順は **[Helm Chart インストールガイド](./HELM_INSTALLATION_GUIDE.md)** を参照してください。
+
+kubectlを使用した手動デプロイ手順は **[Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md)** を参照してください。
 
 > **注意**: Syslog機能を使用する場合は、デプロイ後にNutanixクラスター（Prism Element）でSyslog設定を行い、デプロイしたSyslogサーバ宛てにSyslogを転送するよう設定する必要があります。
 >
@@ -53,7 +55,8 @@ KUBECONFIG=/path/to/your/kubeconfig.conf ./deploy.sh
 
 | ドキュメント | 説明 |
 |---|---|
-| [Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md) | **本番環境デプロイ手順**<br>- クイックスタート<br>- 詳細な手動デプロイ手順<br>- トラブルシューティング<br>- 環境別設定 |
+| [Helm Chart インストールガイド](./HELM_INSTALLATION_GUIDE.md) | **Helm Chartを使用したインストール手順（推奨）**<br>- Namespace自動作成<br>- SSH鍵自動生成<br>- インストール確認<br>- トラブルシューティング |
+| [Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md) | **kubectlを使用した手動デプロイ手順**<br>- クイックスタート<br>- 詳細な手動デプロイ手順<br>- トラブルシューティング<br>- 環境別設定 |
 
 ### 機能仕様書
 
