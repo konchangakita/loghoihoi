@@ -34,6 +34,11 @@ spec:
           # 出力ディレクトリの作成と権限設定
           mkdir -p /app/output/log /app/output/zip
           chmod -R 777 /app/output
+          # SSH鍵ディレクトリの作成と権限設定（PVに保存するため）
+          mkdir -p /app/output/.ssh
+          chmod 700 /app/output/.ssh
+          # 所有者をappuser（uid=1000）に変更（バックエンドPodから書き込み可能にするため）
+          chown -R 1000:1000 /app/output/.ssh
           echo "✓ Output directories prepared"
         volumeMounts:
         - name: output
@@ -60,9 +65,9 @@ spec:
             fieldRef:
               fieldPath: status.podIP
         - name: SSH_KEY_PATH
-          value: "/app/config/.ssh/ntnx-lockdown"
+          value: "/app/output/.ssh/ntnx-lockdown"
         - name: SSH_PUBLIC_KEY_PATH
-          value: "/app/config/.ssh/ntnx-lockdown.pub"
+          value: "/app/output/.ssh/ntnx-lockdown.pub"
         envFrom:
         - configMapRef:
             name: loghoi-config
