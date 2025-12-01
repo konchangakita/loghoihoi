@@ -151,22 +151,6 @@ echo "Kibana:            https://${INGRESS_IP}/kibana"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ```
 
-### API ドキュメントのURL
-
-```bash
-# Ingress IPを取得
-INGRESS_IP=$(kubectl get ingress -n loghoihoi -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
-
-# Swagger UI (docs)
-echo "Swagger UI: http://${INGRESS_IP}/docs"
-
-# ReDoc
-echo "ReDoc: http://${INGRESS_IP}/redoc"
-
-# OpenAPI JSON
-echo "OpenAPI JSON: http://${INGRESS_IP}/openapi.json"
-```
-
 ---
 
 ## 4. SSH鍵の確認

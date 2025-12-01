@@ -18,32 +18,32 @@ Nutanixログほいほい - ログ収集・分析システムのHelm Chart
 
 ```bash
 # Helm Chartでインストール（Namespaceは自動作成される）
-helm install loghoihoi ./helm/loghoihoi --wait --timeout=10m
+helm install loghoihoi ./helm/loghoihoi
 ```
 
-**注意**: `-n loghoihoi`や`--create-namespace`オプションは不要です。Helm Chartの`templates/namespace.yaml`により、`loghoihoi` Namespaceが自動的に作成されます。
+**注意**: `loghoihoi` Namespaceが自動的に作成されます。
 
-### カスタムNamespaceを使用する場合
+## 詳細なインストール手順
+
+詳細なインストール手順、確認方法、カスタムNamespace、カスタムStorageClass、トラブルシューティングについては、[インストールガイド](./INSTALLATION_GUIDE.md)を参照してください。
+
+
+## アクセスURLの確認
 
 ```bash
-# 別のNamespaceを使用する場合
-helm install loghoihoi ./helm/loghoihoi \
-  --set namespace=my-custom-namespace \
-  --wait \
-  --timeout=10m
+# Ingress IPを取得
+INGRESS_IP=$(kubectl get ingress -n loghoihoi -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🌐 WebブラウザでアクセスするURL"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "フロントエンド: https://${INGRESS_IP}/"
+echo "API Swagger:    https://${INGRESS_IP}/docs"
+echo "API ReDoc:      https://${INGRESS_IP}/redoc"
+echo "Kibana:         https://${INGRESS_IP}/kibana"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ```
 
-この場合、`my-custom-namespace`が自動作成されます。
-
-### カスタムStorageClassを使用する場合
-
-```bash
-# カスタムStorageClassを指定
-helm install loghoihoi ./helm/loghoihoi \
-  --set storageClass=nutanix-volume \
-  --wait \
-  --timeout=10m
-```
 
 ## SSH鍵について
 
@@ -53,6 +53,7 @@ helm install loghoihoi ./helm/loghoihoi \
 2. 初回アクセス時に「SSH鍵を生成しています（初回のみ）」と表示
 3. 生成完了後、通常のトップ画面に遷移
 4. SSH鍵は`/app/output/.ssh/ntnx-lockdown`に保存され、PVに永続化されます
+
 
 ## 設定値
 
@@ -99,9 +100,7 @@ kubectl delete namespace loghoihoi --wait=true --timeout=300s
 
 **注意**: Namespaceを削除すると、PVCも削除されます。データを保持したい場合は、事前にバックアップを取得してください。
 
-## 詳細なインストール手順
 
-詳細なインストール手順、確認方法、トラブルシューティングについては、[インストールガイド](./INSTALLATION_GUIDE.md)を参照してください。
 
 ## 参考資料
 
