@@ -2,122 +2,112 @@
 
 Nutanixログほいほい - ログ収集・分析システムのHelm Chart
 
+## 概要
+
+このHelm Chartを使用してLogHoihoiをKubernetes環境にインストールできます。
+
+### 特徴
+
+- ✅ **Namespace自動作成**: Helm Chartが自動的に`loghoihoi` Namespaceを作成します
+- ✅ **SSH鍵自動生成**: Web UIから初回アクセス時にSSH鍵が自動生成されます
+- ✅ **PV永続化**: SSH鍵はPersistent Volumeに保存され、Pod再起動後も保持されます
+
 ## クイックスタート
 
-### 方法A: Helm単体でインストール（生成済み鍵を使用、推奨）
+### デフォルトインストール（推奨）
 
-**前提条件**: SSH鍵が既に生成されていること
+```bash
+# Helm Chartでインストール（Namespaceは自動作成される）
+helm install loghoihoi ./helm/loghoihoi --wait --timeout=10m
+```
 
-Helm単体で完結する方法です。NamespaceとSecretもHelmテンプレートで自動作成されます。
+**注意**: `-n loghoihoi`や`--create-namespace`オプションは不要です。Helm Chartの`templates/namespace.yaml`により、`loghoihoi` Namespaceが自動的に作成されます。
+
+### カスタムNamespaceを使用する場合
+
+```bash
+# 別のNamespaceを使用する場合
+helm install loghoihoi ./helm/loghoihoi \
+  --set namespace=my-custom-namespace \
+  --wait \
+  --timeout=10m
+```
+
+この場合、`my-custom-namespace`が自動作成されます。
+
+### カスタムStorageClassを使用する場合
+
+```bash
+# カスタムStorageClassを指定
+helm install loghoihoi ./helm/loghoihoi \
+  --set storageClass=nutanix-volume \
+  --wait \
+  --timeout=10m
+```
+
+## SSH鍵について
+
+### 自動生成（推奨）
+
+デフォルトでは、Web UIに初回アクセス時にSSH鍵が自動生成されます：
+
+1. フロントエンドにアクセス
+2. 初回アクセス時に「SSH鍵を生成しています（初回のみ）」と表示
+3. 生成完了後、通常のトップ画面に遷移
+4. SSH鍵は`/app/output/.ssh/ntnx-lockdown`に保存され、PVに永続化されます
+
+### 既存のSSH鍵を使用する場合（オプション）
+
+既存のSSH鍵をSecretとして使用したい場合：
 
 ```bash
 # 1. SSH鍵をbase64エンコード
 PRIVATE_KEY_B64=$(cat config/.ssh/loghoi-key | base64 -w 0)
 PUBLIC_KEY_B64=$(cat config/.ssh/loghoi-key.pub | base64 -w 0)
 
-# 2. Helmでインストール（NamespaceとSecretも自動作成）
+# 2. Helmでインストール（Secretも自動作成）
 helm install loghoihoi ./helm/loghoihoi \
-  --create-namespace \
-  --namespace loghoihoi \
   --set sshKeys.create=true \
   --set sshKeys.privateKey="${PRIVATE_KEY_B64}" \
   --set sshKeys.publicKey="${PUBLIC_KEY_B64}" \
-  --set storageClass=nutanix-volume
+  --wait \
+  --timeout=10m
 ```
 
-**この方法のメリット**:
-- Helm単体で完結（追加スクリプト不要）
-- NamespaceとSecretもHelmテンプレートで自動作成
-- Helmパッケージ化後も同じ方法で使用可能
+**注意**: Secretを使用する場合でも、Web UIでの自動生成機能は引き続き動作します。
 
-**注意**: 
-- SSH鍵は事前に生成済みである必要があります
-- 新規にSSH鍵を生成した場合、公開鍵をNutanix Prismに登録する必要があります
+## インストール確認
 
-### 方法B: 自動インストールスクリプトを使用
-
-SSH鍵の自動チェック・生成とHelm Chartのインストールを一度に実行します：
+### Podの状態確認
 
 ```bash
-export KUBECONFIG=/path/to/kubeconfig.conf
-./helm/loghoihoi/install.sh
+# すべてのPodの状態を確認
+kubectl get pods -n loghoihoi
+
+# 期待される出力（すべてRunning）:
+# NAME                               READY   STATUS    RESTARTS   AGE
+# elasticsearch-xxxx                 1/1     Running   0          XXs
+# kibana-xxxx                        1/1     Running   0          XXs
+# loghoi-backend-xxxx                1/1     Running   0          XXs
+# loghoi-frontend-xxxx               1/1     Running   0          XXs
+# loghoi-syslog-xxxx                 1/1     Running   0          XXs
 ```
 
-このスクリプトは以下を自動的に実行します：
-- SSH鍵の存在確認（なければ自動生成）
-- SSH鍵の権限チェック
-- Namespaceの作成
-- Secretの作成
-- Helm Chartのインストール
-
-**注意**: 新規にSSH鍵を生成した場合、公開鍵をNutanix Prismに登録する必要があります。
-
-### 方法C: 手動でインストールする場合
-
-#### 1. SSH鍵のSecret作成（必須）
-
-Helm Chartをインストールする前に、SSH鍵のSecretを作成する必要があります。
-
-#### 方法B-1: 既存のSSH鍵を使用する場合
+### アクセスURLの確認
 
 ```bash
-# SSH鍵のパスを指定してSecretを作成
-kubectl create secret generic loghoi-secrets \
-  --namespace=loghoihoi \
-  --from-file=SSH_PRIVATE_KEY=/path/to/private/key \
-  --from-file=SSH_PUBLIC_KEY=/path/to/public/key.pub
-```
+# Ingress IPを取得
+INGRESS_IP=$(kubectl get ingress -n loghoihoi -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
 
-#### 方法B-2: 新規にSSH鍵を生成する場合
-
-```bash
-# SSH鍵を生成
-ssh-keygen -t rsa -b 4096 \
-  -f /tmp/loghoi-key \
-  -N "" \
-  -C "loghoi@kubernetes"
-
-# Secretを作成
-kubectl create secret generic loghoi-secrets \
-  --namespace=loghoihoi \
-  --from-file=SSH_PRIVATE_KEY=/tmp/loghoi-key \
-  --from-file=SSH_PUBLIC_KEY=/tmp/loghoi-key.pub
-
-# 公開鍵を表示（Nutanix Prismに登録）
-cat /tmp/loghoi-key.pub
-```
-
-**重要**: 新規にSSH鍵を生成した場合、公開鍵をNutanix Prismに登録する必要があります：
-1. Prism Element > Settings > Cluster Lockdown
-2. 「Add Public Key」をクリック
-3. 公開鍵を貼り付けて保存
-
-#### 2. Helm Chartのインストール
-
-#### HostPath使用（デフォルト、開発環境向け）
-
-```bash
-# Namespaceが存在しない場合は事前に作成
-kubectl create namespace loghoihoi
-
-helm install loghoihoi ./helm/loghoihoi --namespace loghoihoi
-```
-
-#### カスタムStorageClass使用（本番環境向け）
-
-```bash
-# Namespaceが存在しない場合は事前に作成
-kubectl create namespace loghoihoi
-
-helm install loghoihoi ./helm/loghoihoi \
-  --namespace loghoihoi \
-  --set storageClass=nutanix-volume
-```
-
-### 3. デプロイ状態の確認
-
-```bash
-kubectl get pods,pvc,svc,ingress -n loghoihoi
+# すべてのURLを表示
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🌐 WebブラウザでアクセスするURL"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "フロントエンド:     https://${INGRESS_IP}/"
+echo "API ドキュメント:   https://${INGRESS_IP}/docs"
+echo "API ドキュメント:   https://${INGRESS_IP}/redoc"
+echo "Kibana:            https://${INGRESS_IP}/kibana"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ```
 
 ## 設定値
@@ -138,72 +128,80 @@ kubectl get pods,pvc,svc,ingress -n loghoihoi
 
 詳細は `values.yaml` を参照してください。
 
-## Helmパッケージ化後の使用方法
+## アップグレード
 
-Helm Chartをパッケージ化した後も、同じ方法でインストールできます：
+既存のインストールをアップグレードする場合:
 
 ```bash
-# パッケージ化
-helm package helm/loghoihoi
+# Helm Chartをアップグレード
+helm upgrade loghoihoi ./helm/loghoihoi --wait --timeout=10m
 
-# パッケージからインストール（方法Aと同じ）
-PRIVATE_KEY_B64=$(cat config/.ssh/loghoi-key | base64 -w 0)
-PUBLIC_KEY_B64=$(cat config/.ssh/loghoi-key.pub | base64 -w 0)
-
-helm install loghoihoi ./loghoihoi-0.1.0.tgz \
-  --namespace loghoihoi \
-  --set sshKeys.create=true \
-  --set sshKeys.privateKey="${PRIVATE_KEY_B64}" \
-  --set sshKeys.publicKey="${PUBLIC_KEY_B64}" \
-  --set storageClass=nutanix-volume
+# アップグレード状態の確認
+helm status loghoihoi -n loghoihoi 2>/dev/null || helm status loghoihoi
 ```
 
 ## アンインストール
 
 ```bash
-helm uninstall loghoihoi -n loghoihoi
+# Helmリリースを削除
+helm uninstall loghoihoi -n loghoihoi 2>/dev/null || helm uninstall loghoihoi 2>/dev/null
 
-# HostPath使用時は、PVも削除
-kubectl delete pv elasticsearch-data-pv backend-output-pv
+# Namespaceごと削除（すべてのリソースが削除される）
+kubectl delete namespace loghoihoi --wait=true --timeout=300s
 ```
+
+**注意**: Namespaceを削除すると、PVCも削除されます。データを保持したい場合は、事前にバックアップを取得してください。
 
 ## トラブルシューティング
 
-### SSH鍵のSecretが見つからない
+### Podが起動しない場合
 
 ```bash
-# Secretの存在確認
-kubectl get secret loghoi-secrets -n loghoihoi
+# Podの詳細情報を確認
+kubectl describe pod -n loghoihoi <pod-name>
 
-# 存在しない場合は作成
-kubectl create secret generic loghoi-secrets \
-  --namespace=loghoihoi \
-  --from-file=SSH_PRIVATE_KEY=/path/to/private/key \
-  --from-file=SSH_PUBLIC_KEY=/path/to/public/key.pub
+# Podのログを確認
+kubectl logs -n loghoihoi <pod-name> --tail=50
 ```
 
-### PVCがPending状態
+### Ingress IPが取得できない場合
 
 ```bash
-# PVCの状態確認
+# Ingressの状態を確認
+kubectl get ingress -n loghoihoi -o yaml
+
+# Ingress Controllerが動作しているか確認
+kubectl get pods -n hoihoi-workspace-vgpxm-f4ff6 -l app.kubernetes.io/name=traefik
+```
+
+### SSH鍵が生成されない場合
+
+```bash
+# バックエンドPod名を取得
+POD_NAME=$(kubectl get pod -n loghoihoi -l app=loghoi,component=backend -o jsonpath='{.items[0].metadata.name}')
+
+# バックエンドのログを確認
+kubectl logs -n loghoihoi $POD_NAME | grep -i "ssh\|鍵"
+
+# ディレクトリの確認
+kubectl exec -n loghoihoi $POD_NAME -- ls -la /app/output/
+
+# 権限の確認
+kubectl exec -n loghoihoi $POD_NAME -- stat -c "%a %n" /app/output/.ssh/
+```
+
+### PVCが作成されない場合
+
+```bash
+# StorageClassの確認
+kubectl get storageclass
+
+# PVCの詳細確認
 kubectl describe pvc -n loghoihoi
-
-# HostPath使用時は、PVが作成されているか確認
-kubectl get pv | grep loghoi
-```
-
-### Podが起動しない
-
-```bash
-# Podの状態確認
-kubectl describe pod <pod-name> -n loghoihoi
-
-# ログ確認
-kubectl logs <pod-name> -n loghoihoi
 ```
 
 ## 参考資料
 
-- [Kubernetesデプロイメントガイド](../../k8s/DEPLOYMENT_GUIDE.md)
-- [Kubernetes仕様書](../../k8s/KUBERNETES_SPEC.md)
-
+- [Helm Chart インストールガイド](../../HELM_INSTALLATION_GUIDE.md) - 詳細なインストール手順とトラブルシューティング
+- [Kubernetesデプロイメントガイド](../../k8s/DEPLOYMENT_GUIDE.md) - kubectlを使用した手動デプロイ手順
+- [SSH鍵管理機能仕様](../../docs/SSH_KEY_MANAGEMENT_SPEC.md) - SSH鍵管理の詳細仕様
