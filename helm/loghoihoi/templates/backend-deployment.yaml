@@ -34,6 +34,11 @@ spec:
           # 出力ディレクトリの作成と権限設定
           mkdir -p /app/output/log /app/output/zip
           chmod -R 777 /app/output
+          # SSH鍵ディレクトリの作成と権限設定（PVに保存するため）
+          mkdir -p /app/output/.ssh
+          chmod 700 /app/output/.ssh
+          # 所有者をappuser（uid=1000）に変更（バックエンドPodから書き込み可能にするため）
+          chown -R 1000:1000 /app/output/.ssh
           echo "✓ Output directories prepared"
         volumeMounts:
         - name: output
@@ -60,14 +65,16 @@ spec:
             fieldRef:
               fieldPath: status.podIP
         - name: SSH_KEY_PATH
-          value: "/app/config/.ssh/ntnx-lockdown"
+          value: "/app/output/.ssh/ntnx-lockdown"
         - name: SSH_PUBLIC_KEY_PATH
-          value: "/app/config/.ssh/ntnx-lockdown.pub"
+          value: "/app/output/.ssh/ntnx-lockdown.pub"
         envFrom:
         - configMapRef:
             name: loghoi-config
+{{- if or .Values.sshKeys.create .Values.sshKeys.existingSecret }}
         - secretRef:
-            name: loghoi-secrets
+            name: {{ if .Values.sshKeys.existingSecret }}{{ .Values.sshKeys.existingSecret }}{{ else }}loghoi-secrets{{ end }}
+{{- end }}
         resources:
           requests:
             memory: "256Mi"
@@ -93,9 +100,11 @@ spec:
           successThreshold: 1
           failureThreshold: 3
         volumeMounts:
+{{- if or .Values.sshKeys.create .Values.sshKeys.existingSecret }}
         - name: ssh-keys
           mountPath: /app/config/.ssh
           readOnly: true
+{{- end }}
         - name: uploads
           mountPath: /app/uploads
         - name: logs
@@ -103,6 +112,7 @@ spec:
         - name: output
           mountPath: /app/output
       volumes:
+{{- if .Values.sshKeys.create }}
       - name: ssh-keys
         secret:
           secretName: loghoi-secrets
@@ -113,6 +123,18 @@ spec:
           - key: SSH_PUBLIC_KEY
             path: ntnx-lockdown.pub
             mode: 0644
+{{- else if .Values.sshKeys.existingSecret }}
+      - name: ssh-keys
+        secret:
+          secretName: {{ .Values.sshKeys.existingSecret }}
+          items:
+          - key: SSH_PRIVATE_KEY
+            path: ntnx-lockdown
+            mode: 0600
+          - key: SSH_PUBLIC_KEY
+            path: ntnx-lockdown.pub
+            mode: 0644
+{{- end }}
       - name: uploads
         emptyDir: {}
       - name: logs

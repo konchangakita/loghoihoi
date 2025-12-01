@@ -7,31 +7,34 @@ Prism Centralに登録されたクラスターから、CVMのリアルタイム�
 
 ## 🚀 クイックスタート
 
+### デフォルトインストール（推奨）
+
+前提条件：KUBECONFIGが設定済みであること
+```bash
+# Helm Chartでインストール（Namespaceは自動作成される）
+helm install loghoihoi ./helm/loghoihoi
+```
+
+**注意**: `loghoihoi` Namespaceが自動的に作成されます。
+
+
 ### docker-compose（開発環境）
 ```bash
-# デフォルト（host.docker.internal使用、ホストIPを自動検出）
-docker-compose -f docker-compose.yml up -d --build
-
-# カスタムバックエンドURLを指定する場合
-NEXT_PUBLIC_BACKEND_URL=http://your-backend-ip:7776 docker-compose -f docker-compose.yml up -d --build
-
-# アクセス
 # ホストマシンのIPアドレスを確認
 HOST_IP=$(hostname -I | awk '{print $1}')
 echo "ホストIPアドレス: ${HOST_IP}"
 
+# カスタムバックエンドURLを指定する場合
+NEXT_PUBLIC_BACKEND_URL=http://${HOST_IP}:7776 docker-compose -f docker-compose.yml up -d --build
+
+# アクセス
+
 # フロントエンド: http://${HOST_IP}:7777
-# バックエンドAPI: http://${HOST_IP}:7776
+# バックエンドAPI: http://${HOST_IP}:7776/docs, http://${HOST_IP}:7776/redoc
 # Kibana: http://${HOST_IP}:5601
 ```
 
-**注意**: 
-- `NEXT_PUBLIC_BACKEND_URL`環境変数が設定されていない場合、デフォルトで`http://host.docker.internal:7776`が使用されます
-- `host.docker.internal`はDocker 20.10以降でLinux環境でもサポートされています
-- 古いDockerバージョンの場合、`extra_hosts`で`host-gateway`にマッピングされます
-- docker-composeではコンテナ内から`localhost`はコンテナ自身を指すため、ホストのバックエンドにアクセスするには`host.docker.internal`が必要です
-
-### Kubernetes（本番環境）
+### Kubernetes（helm使わない）
 ```bash
 cd k8s
 KUBECONFIG=/path/to/your/kubeconfig.conf ./deploy.sh
@@ -40,7 +43,9 @@ KUBECONFIG=/path/to/your/kubeconfig.conf ./deploy.sh
 # Ingress経由でアクセス（環境に応じて設定）
 ```
 
-詳細なデプロイ手順は **[Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md)** を参照してください。
+詳細なインストール手順は **[Helm Chart インストールガイド](./helm/loghoihoi/INSTALLATION_GUIDE.md)** を参照してください。
+
+kubectlを使用した手動デプロイ手順は **[Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md)** を参照してください。
 
 > **注意**: Syslog機能を使用する場合は、デプロイ後にNutanixクラスター（Prism Element）でSyslog設定を行い、デプロイしたSyslogサーバ宛てにSyslogを転送するよう設定する必要があります。
 >
@@ -53,7 +58,8 @@ KUBECONFIG=/path/to/your/kubeconfig.conf ./deploy.sh
 
 | ドキュメント | 説明 |
 |---|---|
-| [Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md) | **本番環境デプロイ手順**<br>- クイックスタート<br>- 詳細な手動デプロイ手順<br>- トラブルシューティング<br>- 環境別設定 |
+| [Helm Chart インストールガイド](./helm/loghoihoi/INSTALLATION_GUIDE.md) | **Helm Chartを使用したインストール手順（推奨）**<br>- Namespace自動作成<br>- SSH鍵自動生成<br>- インストール確認<br>- トラブルシューティング |
+| [Kubernetesデプロイメントガイド](./k8s/DEPLOYMENT_GUIDE.md) | **kubectlを使用した手動デプロイ手順**<br>- クイックスタート<br>- 詳細な手動デプロイ手順<br>- トラブルシューティング<br>- 環境別設定 |
 
 ### 機能仕様書
 
