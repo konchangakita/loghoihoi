@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: loghoi-backend
-  namespace: loghoihoi
+  namespace: {{ .Values.namespace }}
   labels:
     app: loghoi
     component: backend
-    version: v1.1.2
+    version: {{ .Chart.AppVersion }}
 spec:
   replicas: 1  # PersistentVolume(RWO)使用のため1に変更
   strategy:
@@ -20,7 +20,7 @@ spec:
       labels:
         app: loghoi
         component: backend
-        version: v1.1.2
+        version: {{ .Chart.AppVersion }}
     spec:
       securityContext:
         fsGroup: 1000
@@ -45,8 +45,8 @@ spec:
           mountPath: /app/output
       containers:
       - name: backend
-        image: ghcr.io/konchangakita/loghoi-backend:v1.1.2
-        imagePullPolicy: Always
+        image: "{{ .Values.image.backend.repository }}:{{ .Values.image.backend.tag }}"
+        imagePullPolicy: {{ .Values.image.backend.pullPolicy }}
         ports:
         - containerPort: 7776
           name: http
@@ -71,9 +71,10 @@ spec:
         envFrom:
         - configMapRef:
             name: loghoi-config
+{{- if or .Values.sshKeys.create .Values.sshKeys.existingSecret }}
         - secretRef:
-            name: loghoi-secrets
-            optional: true
+            name: {{ if .Values.sshKeys.existingSecret }}{{ .Values.sshKeys.existingSecret }}{{ else }}loghoi-secrets{{ end }}
+{{- end }}
         resources:
           requests:
             memory: "256Mi"
@@ -99,9 +100,11 @@ spec:
           successThreshold: 1
           failureThreshold: 3
         volumeMounts:
+{{- if or .Values.sshKeys.create .Values.sshKeys.existingSecret }}
         - name: ssh-keys
           mountPath: /app/config/.ssh
           readOnly: true
+{{- end }}
         - name: uploads
           mountPath: /app/uploads
         - name: logs
@@ -109,6 +112,7 @@ spec:
         - name: output
           mountPath: /app/output
       volumes:
+{{- if .Values.sshKeys.create }}
       - name: ssh-keys
         secret:
           secretName: loghoi-secrets
@@ -119,6 +123,18 @@ spec:
           - key: SSH_PUBLIC_KEY
             path: ntnx-lockdown.pub
             mode: 0644
+{{- else if .Values.sshKeys.existingSecret }}
+      - name: ssh-keys
+        secret:
+          secretName: {{ .Values.sshKeys.existingSecret }}
+          items:
+          - key: SSH_PRIVATE_KEY
+            path: ntnx-lockdown
+            mode: 0600
+          - key: SSH_PUBLIC_KEY
+            path: ntnx-lockdown.pub
+            mode: 0644
+{{- end }}
       - name: uploads
         emptyDir: {}
       - name: logs
@@ -128,3 +144,4 @@ spec:
           claimName: loghoi-backend-output
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
+

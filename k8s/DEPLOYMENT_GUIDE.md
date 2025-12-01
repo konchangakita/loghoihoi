@@ -132,7 +132,7 @@ KUBECONFIG=/path/to/your/kubeconfig.conf STORAGE_CLASS=my-storage-class ./deploy
 ### スクリプトが自動的に行うこと
 
 1. ✅ クラスタ接続確認
-2. ✅ Namespace作成 (`loghoihoi`)
+2. ✅ Namespace作成 (`loghoihoi`) - Helm Chartで自動作成
 3. ✅ **SSH鍵の自動生成・管理**
    - 既存の鍵がある場合: そのまま使用
    - 鍵が無い場合: 新規生成して公開鍵を表示
@@ -178,20 +178,92 @@ ssh-rsa AAAAB3NzaC1yc2E... loghoi@kubernetes
 公開鍵の登録は完了しましたか？ (y/N):
 ```
 
+### デプロイ後のアクセス情報確認
+
+デプロイ完了後、以下のコマンドでWebブラウザでアクセスするIPアドレスを確認できます：
+
+```bash
+# Ingress IPアドレスを取得して表示
+INGRESS_IP=$(kubectl get ingress loghoi-ingress -n loghoihoi -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🌐 WebブラウザでアクセスするURL"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "フロントエンド:     http://${INGRESS_IP}/"
+echo "バックエンドAPI:    http://${INGRESS_IP}/api/"
+echo "API ドキュメント:   http://${INGRESS_IP}/docs"
+echo "Kibana:            http://${INGRESS_IP}/kibana"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+```
+
 ---
 
 ## 詳細なデプロイ手順
 
 自動デプロイスクリプトを使わずに、手動でデプロイする場合の詳細手順です。
 
-### 1. 環境変数の設定
+### 方法A: Helm Chartを使用（推奨）
+
+Helm Chartを使用すると、Namespaceが自動的に作成され、すべてのリソースが一括でデプロイされます。
+
+#### 1. 環境変数の設定
+
+```bash
+export KUBECONFIG=/path/to/your/kubeconfig.conf
+```
+
+#### 2. Helm Chartでデプロイ
+
+**デフォルト（loghoihoi Namespaceを自動作成）**:
+
+```bash
+cd /path/to/loghoihoi
+helm install loghoihoi ./helm/loghoihoi
+```
+
+このコマンドで以下が自動的に実行されます：
+- ✅ `loghoihoi` Namespaceが自動作成される（`templates/namespace.yaml`）
+- ✅ すべてのリソースがデプロイされる
+
+**オプション: 別のNamespaceを使用する場合**:
+
+```bash
+helm install loghoihoi ./helm/loghoihoi --set namespace=my-custom-namespace
+```
+
+この場合、`my-custom-namespace`が自動作成されます。
+
+#### 3. デプロイ状態の確認
+
+```bash
+# Podの状態確認
+kubectl get pods -n loghoihoi
+
+# すべてのリソース確認
+helm status loghoihoi -n loghoihoi
+```
+
+#### 4. SSH鍵の生成（Web UIから）
+
+デプロイ後、Web UIにアクセスすると、SSH鍵が自動的に生成されます：
+- フロントエンドにアクセス: `http://<INGRESS_IP>/`
+- 初回アクセス時にSSH鍵が自動生成される
+- 生成された鍵は`/app/output/.ssh/ntnx-lockdown`に保存される（PVに永続化）
+
+---
+
+### 方法B: kubectlを使用（手動デプロイ）
+
+Helm Chartを使用せずに、kubectlで手動デプロイする場合の手順です。
+
+#### 1. 環境変数の設定
 
 ```bash
 export KUBECONFIG=/path/to/your/kubeconfig.conf
 export NAMESPACE=loghoihoi
 ```
 
-### 2. Namespace作成
+#### 2. Namespace作成
 
 ```bash
 kubectl create namespace ${NAMESPACE}
@@ -460,7 +532,15 @@ kubectl logs -n loghoihoi -l app=elasticsearch --tail=50
 # Ingress IPアドレスを取得
 INGRESS_IP=$(kubectl get ingress loghoi-ingress -n loghoihoi -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-echo "Application URL: http://${INGRESS_IP}"
+# WebブラウザでアクセスするIPアドレスを表示
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🌐 WebブラウザでアクセスするURL"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "フロントエンド:     http://${INGRESS_IP}/"
+echo "バックエンドAPI:    http://${INGRESS_IP}/api/"
+echo "API ドキュメント:   http://${INGRESS_IP}/docs"
+echo "Kibana:            http://${INGRESS_IP}/kibana"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 ```
 
 ブラウザで以下にアクセス:

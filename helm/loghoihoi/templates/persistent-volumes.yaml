@@ -1,0 +1,48 @@
+{{- if eq .Values.storageClass "manual" }}
+# HostPath用のPersistentVolume
+# storageClass=manual の場合のみ作成されます
+# ノード名は自動選択されます（ワーカーノード優先）
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: elasticsearch-data-pv
+  labels:
+    app: loghoi
+    component: elasticsearch
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  claimRef:
+    name: elasticsearch-data
+    namespace: {{ .Values.namespace }}
+  hostPath:
+    path: /mnt/loghoi/elasticsearch-data
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: backend-output-pv
+  labels:
+    app: loghoi
+    component: backend-storage
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  claimRef:
+    name: loghoi-backend-output
+    namespace: {{ .Values.namespace }}
+  hostPath:
+    path: /mnt/loghoi/backend-output
+    type: DirectoryOrCreate
+{{- end }}
+

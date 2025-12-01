@@ -2,14 +2,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: loghoi-config
-  namespace: loghoihoi
+  namespace: {{ .Values.namespace }}
   labels:
     app: loghoi
     component: config
 data:
   # アプリケーション設定
   APP_NAME: "LogHoi"
-  APP_VERSION: "v1.1.2"
+  APP_VERSION: "{{ .Chart.AppVersion }}"
   DEBUG: "false"
   
   # バックエンド設定
@@ -47,3 +47,4 @@ data:
   MAX_FILE_SIZE: "100MB"
   UPLOAD_DIR: "/app/uploads"
   LOG_DIR: "/app/logs"
+

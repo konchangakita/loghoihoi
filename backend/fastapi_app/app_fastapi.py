@@ -9,7 +9,7 @@ import time
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
 
 # FastAPI関連インポート
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
@@ -82,7 +82,7 @@ app = FastAPI(
     description="Nutanix Log Collection and Real-time Monitoring API",
     version="2.0.0",
     docs_url="/docs",  # Swagger UI
-    redoc_url="/redoc"  # ReDoc
+    redoc_url=None  # デフォルトのReDocは無効化（CDN URLの問題のため、カスタムエンドポイントを使用）
 )
 
 # ログミドルウェアを追加
@@ -556,7 +556,43 @@ async def index():
         with open("templates/index.html", "r") as f:
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
-        return HTMLResponse(content="<h1>LogHoi API Server</h1><p>API Documentation: <a href='/docs'>/docs</a></p>")
+        return HTMLResponse(content="<h1>LogHoi API Server</h1><p>API Documentation: <a href='/docs'>/docs</a> | <a href='/redoc'>/redoc</a></p>")
+
+@app.get("/redoc", response_class=HTMLResponse)
+async def redoc(request: Request):
+    """ReDoc API Documentation (カスタムエンドポイント - CDN URL修正版)"""
+    # リクエストからホスト情報を取得（X-Forwarded-Protoヘッダーを確認してHTTPSを検出）
+    scheme = request.headers.get("X-Forwarded-Proto", request.url.scheme)
+    if scheme == "https" or request.url.scheme == "https":
+        base_url = f"https://{request.url.netloc}"
+    else:
+        base_url = str(request.base_url).rstrip('/')
+    
+    # 正しいCDN URLを使用（@nextタグを削除）
+    redoc_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>LogHoi API - ReDoc</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <style>
+      body {{
+        margin: 0;
+        padding: 0;
+      }}
+    </style>
+</head>
+<body>
+    <noscript>
+        ReDoc requires Javascript to function. Please enable it to browse the documentation.
+    </noscript>
+    <redoc spec-url="{base_url}/openapi.json"></redoc>
+    <script src="https://cdn.jsdelivr.net/npm/redoc/bundles/redoc.standalone.js"></script>
+</body>
+</html>"""
+    return HTMLResponse(content=redoc_html)
 
 # ========================================
 # PC/Cluster Management API
@@ -671,6 +707,93 @@ async def get_cvmlist_api(cluster_name: Dict[str, str]) -> Dict[str, Any]:
     except Exception as e:
         print(f"❌ CVM一覧取得エラー: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/ssh-key/setup")
+async def ssh_key_setup() -> Dict[str, Any]:
+    """
+    SSH鍵セットアップAPI
+    
+    鍵が存在する場合はそのまま返し、存在しない場合は生成する。
+    アプリ起動時に自動的に呼び出される。
+    
+    Response:
+        {
+            "status": "exists" | "generated",
+            "data": {
+                "public_key": "ssh-rsa AAAAB3...",
+                "message": "SSH鍵が既に存在します" | "SSH鍵を生成しました"
+            }
+        }
+    """
+    import subprocess
+    import stat
+    
+    # SSH鍵のパスを取得（環境変数またはデフォルト値）
+    key_file = os.getenv("SSH_KEY_PATH", "/app/config/.ssh/loghoi-key")
+    pub_key_file = f"{key_file}.pub"
+    key_dir = os.path.dirname(key_file)
+    
+    # 鍵が既に存在する場合
+    if os.path.exists(key_file) and os.path.exists(pub_key_file):
+        try:
+            with open(pub_key_file, 'r') as f:
+                public_key = f.read().strip()
+            return {
+                "status": "exists",
+                "data": {
+                    "public_key": public_key,
+                    "message": "SSH鍵が既に存在します"
+                }
+            }
+        except Exception as e:
+            # 読み込みエラーの場合は再生成
+            print(f"⚠️ SSH鍵の読み込みエラー: {e}。再生成します。")
+    
+    # 鍵が存在しない場合は生成
+    try:
+        # ディレクトリ作成
+        os.makedirs(key_dir, mode=0o700, exist_ok=True)
+        
+        # SSH鍵生成（subprocessでssh-keygenを実行）
+        result = subprocess.run(
+            [
+                "ssh-keygen",
+                "-t", "rsa",
+                "-b", "4096",
+                "-f", key_file,
+                "-N", "",  # パスフレーズなし
+                "-C", "loghoi@kubernetes"
+            ],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        # 権限設定
+        os.chmod(key_file, stat.S_IRUSR | stat.S_IWUSR)  # 600
+        os.chmod(pub_key_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)  # 644
+        
+        # 公開鍵を読み込んで返す
+        with open(pub_key_file, 'r') as f:
+            public_key = f.read().strip()
+        
+        print(f"✓ SSH鍵を生成しました: {key_file}")
+        
+        return {
+            "status": "generated",
+            "data": {
+                "public_key": public_key,
+                "message": "SSH鍵を生成しました"
+            }
+        }
+    except subprocess.CalledProcessError as e:
+        error_msg = f"SSH鍵の生成に失敗しました: {e.stderr}"
+        print(f"❌ {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
+    except Exception as e:
+        error_msg = f"SSH鍵の生成に失敗しました: {str(e)}"
+        print(f"❌ {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @app.get("/api/sshkey")
 async def get_ssh_public_key() -> Dict[str, Any]:
