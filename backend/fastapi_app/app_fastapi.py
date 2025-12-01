@@ -9,7 +9,7 @@ import time
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
 
 # FastAPI関連インポート
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
@@ -82,7 +82,7 @@ app = FastAPI(
     description="Nutanix Log Collection and Real-time Monitoring API",
     version="2.0.0",
     docs_url="/docs",  # Swagger UI
-    redoc_url="/redoc"  # ReDoc
+    redoc_url=None  # デフォルトのReDocは無効化（CDN URLの問題のため、カスタムエンドポイントを使用）
 )
 
 # ログミドルウェアを追加
@@ -556,7 +556,39 @@ async def index():
         with open("templates/index.html", "r") as f:
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
-        return HTMLResponse(content="<h1>LogHoi API Server</h1><p>API Documentation: <a href='/docs'>/docs</a></p>")
+        return HTMLResponse(content="<h1>LogHoi API Server</h1><p>API Documentation: <a href='/docs'>/docs</a> | <a href='/redoc'>/redoc</a></p>")
+
+@app.get("/redoc", response_class=HTMLResponse)
+async def redoc(request: Request):
+    """ReDoc API Documentation (カスタムエンドポイント - CDN URL修正版)"""
+    # リクエストからホスト情報を取得
+    base_url = str(request.base_url).rstrip('/')
+    
+    # 正しいCDN URLを使用（@nextタグを削除）
+    redoc_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>LogHoi API - ReDoc</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <style>
+      body {{
+        margin: 0;
+        padding: 0;
+      }}
+    </style>
+</head>
+<body>
+    <noscript>
+        ReDoc requires Javascript to function. Please enable it to browse the documentation.
+    </noscript>
+    <redoc spec-url="{base_url}/openapi.json"></redoc>
+    <script src="https://cdn.jsdelivr.net/npm/redoc/bundles/redoc.standalone.js"></script>
+</body>
+</html>"""
+    return HTMLResponse(content=redoc_html)
 
 # ========================================
 # PC/Cluster Management API
