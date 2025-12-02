@@ -372,20 +372,6 @@ kubectl delete pvc -n loghoihoi --all
 
 ---
 
-## 8. アンインストール
-
-```bash
-# Helmリリースを削除
-helm uninstall loghoihoi -n loghoihoi 2>/dev/null || helm uninstall loghoihoi 2>/dev/null
-
-# Namespaceごと削除（すべてのリソースが削除される）
-kubectl delete namespace loghoihoi --wait=true --timeout=300s
-```
-
-**注意**: Namespaceを削除すると、PVCも削除されます。データを保持したい場合は、事前にバックアップを取得してください。
-
----
-
 ## まとめ
 
 このガイドで以下を確認できます：
