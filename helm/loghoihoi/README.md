@@ -67,9 +67,6 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 - `image.frontend.tag`: フロントエンドイメージタグ
 - `ingress.enabled`: Ingressの有効化
 - `ingress.className`: Ingressクラス名
-- `sshKeys.create`: Secretを作成するか（デフォルト: `false`）
-- `sshKeys.privateKey`: base64エンコードされた秘密鍵
-- `sshKeys.publicKey`: base64エンコードされた公開鍵
 
 詳細は `values.yaml` を参照してください。
 
