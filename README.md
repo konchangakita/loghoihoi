@@ -7,10 +7,36 @@ Prism Centralに登録されたクラスターから、CVMのリアルタイム�
 
 ## 🚀 クイックスタート
 
-### デフォルトインストール（推奨）
+### 方法1. Helmパッケージでのインストール（OCIレジストリ）
+
+前提条件：KUBECONFIGが設定済みであること
+
+#### 基本インストール（Namespaceは自動作成される）
+```bash
+helm install loghoihoi oci://ghcr.io/konchangakita/loghoihoi \
+  --version 0.1.0
+```
+
+#### ネームスペースを指定したインストール
+```bash
+helm install loghoihoi oci://ghcr.io/konchangakita/loghoihoi \
+  --version 0.1.0 \
+  --set namespace=loghoihoi-test
+```
+
+#### 削除方法
+```bash
+helm uninstall loghoihoi
+```
+
+### 方法2. デフォルトインストール（git cloneからの方法）
 
 前提条件：KUBECONFIGが設定済みであること
 ```bash
+# リポジトリをクローン
+git clone https://github.com/konchangakita/loghoihoi.git
+cd loghoihoi
+
 # Helm Chartでインストール（Namespaceは自動作成される）
 helm install loghoihoi ./helm/loghoihoi
 ```
@@ -18,7 +44,7 @@ helm install loghoihoi ./helm/loghoihoi
 **注意**: `loghoihoi` Namespaceが自動的に作成されます。
 
 
-### docker-compose（開発環境）
+### docker-compose（開発環境用）
 ```bash
 # ホストマシンのIPアドレスを確認
 HOST_IP=$(hostname -I | awk '{print $1}')
