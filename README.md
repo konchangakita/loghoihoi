@@ -28,9 +28,10 @@ helm install loghoihoi oci://ghcr.io/konchangakita/loghoihoi \
 ```bash
 helm uninstall loghoihoi
 ```
-  
-  
-  
+ 
+<br>
+<br>
+ 
 ### 方法2. デフォルトインストール（git cloneからの方法）
 
 前提条件：KUBECONFIGが設定済みであること
@@ -42,8 +43,9 @@ cd loghoihoi
 # Helm Chartでインストール（Namespaceは自動作成される）
 helm install loghoihoi ./helm/loghoihoi
 ```
-  
-  
+ 
+<br>
+<br>
   
 ### 開発環境用 docker-compose
 ```bash
@@ -60,7 +62,9 @@ NEXT_PUBLIC_BACKEND_URL=http://${HOST_IP}:7776 docker-compose -f docker-compose.
 # バックエンドAPI: http://${HOST_IP}:7776/docs, http://${HOST_IP}:7776/redoc
 # Kibana: http://${HOST_IP}:5601
 ```
-  
+ 
+<br>
+<br>
   
 ### Kubernetes（helm使わない）
 ```bash
@@ -79,7 +83,10 @@ kubectlを使用した手動デプロイ手順は **[Kubernetesデプロイメ�
 >
 > 設定手順の詳細は参考ブログ「[【Nutanix ログほいほい】シスログ ほいほい](https://konchangakita.hatenablog.com/entry/2024/05/20/090000)」を参照してください。なお、AOS（Acropolis Operating System）のバージョンによってコマンドが変更になる可能性があります。
 
-
+ 
+<br>
+<br>
+ 
 ## 📚 ドキュメント
 
 ### Kubernetes デプロイメントガイド
