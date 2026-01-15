@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Suspense } from 'react'
 
+// CI/CD: GitHub Actionsで自動ビルドが実行されます
+
 //api
 import { getPclist } from './_api/pclist/getPclist'
 import { getBackendUrl } from '@/lib/getBackendUrl'

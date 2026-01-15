@@ -4,6 +4,8 @@
 Nutanix環境のログ収集ツールです  
 Prism Centralに登録されたクラスターから、CVMのリアルタイムログ、Syslog、ログファイル収集
 
+> **CI/CD**: このプロジェクトはGitHub ActionsでCIパイプラインが動作しています。
+
 
 ## 🚀 クイックスタート
 

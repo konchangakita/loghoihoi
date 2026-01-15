@@ -8,6 +8,8 @@ import time
 # 共通ライブラリのパスを追加
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../shared'))
 
+# CI/CD: GitHub Actionsで自動テストが実行されます
+
 # FastAPI関連インポート
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
