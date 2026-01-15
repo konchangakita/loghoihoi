@@ -1,0 +1,218 @@
+name: CI - Complete (build & validate)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      syslog: ${{ steps.filter.outputs.syslog }}
+      helm: ${{ steps.filter.outputs.helm }}
+      compose: ${{ steps.filter.outputs.compose }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Paths filter
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            # NOTE: shared/ はバックエンド専用（Pythonコードのみ）のため、frontend filter には含めない
+            frontend:
+              - 'frontend/**'
+
+            # NOTE: Dockerfileのglobを絞って「関係ないDockerfile変更」で無駄に走らないようにする
+            backend:
+              - 'backend/**'
+              - 'shared/**'              # sharedディレクトリの変更もbackendに影響
+              - 'backend/Dockerfile*'
+              - 'Dockerfile*'            # ルートDockerfileに依存している場合だけ残す（不要なら削除OK）
+              - '.dockerignore'          # ビルド結果に影響するため
+
+            syslog:
+              - 'syslog/**'
+              - 'syslog/Dockerfile*'
+              - '.dockerignore'
+
+            helm:
+              - 'helm/**'
+              - 'k8s/**'
+
+            compose:
+              - 'docker-compose.yml'
+              - 'docker-compose.*.yml'
+
+  build-frontend:
+    name: Build frontend (yarn build)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    defaults:
+      run:
+        working-directory: frontend/next-app/loghoi
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: frontend/next-app/loghoi/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Show versions
+        run: |
+          node -v
+          yarn -v
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+  build-backend:
+    name: Build backend (docker build only)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build backend Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile.k8s
+          push: false
+          tags: loghoi-backend:ci-test
+
+  build-syslog:
+    name: Build syslog (docker build only)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.syslog == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build syslog Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./syslog
+          file: ./syslog/Dockerfile.k8s
+          push: false
+          tags: loghoi-syslog:ci-test
+
+  validate-packaging:
+    name: Validate compose/helm (lint & template)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.helm == 'true' || needs.changes.outputs.compose == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker compose (config)
+        if: needs.changes.outputs.compose == 'true'
+        run: |
+          docker version
+          docker compose version
+          docker compose -f docker-compose.yml config -q
+
+      # NOTE: Compose buildは重くなりがちなので、push時のみ実施（PRは構文チェックに留める）
+      - name: Validate docker compose (build on push)
+        if: needs.changes.outputs.compose == 'true' && github.event_name == 'push'
+        run: |
+          # サービス名不一致事故を避けるため、全サービスをビルド（ビルド不要なサービスは自動スキップ）
+          docker compose -f docker-compose.yml build
+
+      - name: Setup Helm
+        if: needs.changes.outputs.helm == 'true'
+        uses: azure/setup-helm@v4
+        # NOTE: version を指定しないと安定した最新が入ることが多い（latest指定は逆にブレの原因になりがち）
+
+      - name: Helm lint & template
+        if: needs.changes.outputs.helm == 'true'
+        run: |
+          helm version
+          helm lint ./helm/loghoihoi
+          # デフォルト値でレンダリング
+          helm template loghoihoi ./helm/loghoihoi >/dev/null
+          # values.yamlでもレンダリング（valuesで壊れるのを検出）
+          helm template loghoihoi ./helm/loghoihoi -f ./helm/loghoihoi/values.yaml >/dev/null
+
+  # 変更がない場合でも「CIが成功扱い」になるよう、最後に集約ジョブを置く
+  ci-summary:
+    name: CI summary
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - build-frontend
+      - build-backend
+      - build-syslog
+      - validate-packaging
+    if: always()
+    steps:
+      - name: Check CI results
+        shell: bash
+        run: |
+          set -e
+
+          echo "=== Change Detection ==="
+          echo "frontend changed:   ${{ needs.changes.outputs.frontend }}"
+          echo "backend changed:    ${{ needs.changes.outputs.backend }}"
+          echo "syslog changed:     ${{ needs.changes.outputs.syslog }}"
+          echo "helm changed:       ${{ needs.changes.outputs.helm }}"
+          echo "compose changed:    ${{ needs.changes.outputs.compose }}"
+          echo ""
+          echo "=== Job Results ==="
+          echo "build-frontend:     ${{ needs.build-frontend.result }}"
+          echo "build-backend:      ${{ needs.build-backend.result }}"
+          echo "build-syslog:       ${{ needs.build-syslog.result }}"
+          echo "validate-packaging: ${{ needs.validate-packaging.result }}"
+          echo ""
+
+          failed_jobs=()
+
+          # failure/cancelled は失敗扱い
+          if [ "${{ needs.build-frontend.result }}" = "failure" ] || [ "${{ needs.build-frontend.result }}" = "cancelled" ]; then failed_jobs+=("build-frontend"); fi
+          if [ "${{ needs.build-backend.result }}"  = "failure" ] || [ "${{ needs.build-backend.result }}"  = "cancelled" ]; then failed_jobs+=("build-backend"); fi
+          if [ "${{ needs.build-syslog.result }}"   = "failure" ] || [ "${{ needs.build-syslog.result }}"   = "cancelled" ]; then failed_jobs+=("build-syslog"); fi
+          if [ "${{ needs.validate-packaging.result }}" = "failure" ] || [ "${{ needs.validate-packaging.result }}" = "cancelled" ]; then failed_jobs+=("validate-packaging"); fi
+
+          # 変更があったのにskippedはNG（if条件ミス検知）
+          if [ "${{ needs.changes.outputs.frontend }}" = "true" ] && [ "${{ needs.build-frontend.result }}" = "skipped" ]; then failed_jobs+=("build-frontend(skipped-unexpected)"); fi
+          if [ "${{ needs.changes.outputs.backend }}"  = "true" ] && [ "${{ needs.build-backend.result }}"  = "skipped" ]; then failed_jobs+=("build-backend(skipped-unexpected)"); fi
+          if [ "${{ needs.changes.outputs.syslog }}"   = "true" ] && [ "${{ needs.build-syslog.result }}"   = "skipped" ]; then failed_jobs+=("build-syslog(skipped-unexpected)"); fi
+
+          packaging_changed="false"
+          if [ "${{ needs.changes.outputs.helm }}" = "true" ] || [ "${{ needs.changes.outputs.compose }}" = "true" ]; then packaging_changed="true"; fi
+          if [ "$packaging_changed" = "true" ] && [ "${{ needs.validate-packaging.result }}" = "skipped" ]; then failed_jobs+=("validate-packaging(skipped-unexpected)"); fi
+
+          if [ ${#failed_jobs[@]} -gt 0 ]; then
+            echo "❌ CI failed. Issues: ${failed_jobs[*]}"
+            exit 1
+          fi
+
+          echo "✅ CI passed. All required jobs succeeded; others were skipped as expected."
+
+
