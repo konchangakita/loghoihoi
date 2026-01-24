@@ -326,15 +326,12 @@ jobs:
           # 複数のプッシュ先を試行
           echo "🚀 Attempting to push Helm chart..."
           
-          # まずはプライマリパスを試行
-          if helm push ./helm-packages/loghoihoi-${CHART_VERSION}.tgz oci://ghcr.io/${{ github.repository_owner }}/loghoihoi; then
-            echo "✅ Successfully pushed to ghcr.io/${{ github.repository_owner }}/loghoihoi:${CHART_VERSION}"
-          else
-            echo "❌ Primary path failed, trying alternative path..."
-            # 代替パスを試行
-            helm push ./helm-packages/loghoihoi-${CHART_VERSION}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts/loghoihoi
-            echo "✅ Successfully pushed to ghcr.io/${{ github.repository_owner }}/charts/loghoihoi:${CHART_VERSION}"
-          fi
+          # GitHub Container Registryに正しいパスでプッシュ
+          TARGET_PATH="oci://ghcr.io/konchangakita/loghoihoi"
+          echo "📤 Pushing to: ${TARGET_PATH}"
+          
+          helm push ./helm-packages/loghoihoi-${CHART_VERSION}.tgz ${TARGET_PATH}
+          echo "✅ Successfully pushed to ghcr.io/konchangakita/loghoihoi:${CHART_VERSION}"
 
   # 変更がない場合でも「CIが成功扱い」になるよう、最後に集約ジョブを置く
   ci-summary:
