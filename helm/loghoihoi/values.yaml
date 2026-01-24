@@ -5,11 +5,15 @@
 image:
   backend:
     repository: ghcr.io/konchangakita/loghoi-backend
-    tag: v1.1.3
+    tag: latest
     pullPolicy: Always
   frontend:
     repository: ghcr.io/konchangakita/loghoi-frontend
-    tag: v1.1.2
+    tag: latest
+    pullPolicy: Always
+  syslog:
+    repository: ghcr.io/konchangakita/loghoi-syslog
+    tag: latest
     pullPolicy: Always
 
 # Ingress設定

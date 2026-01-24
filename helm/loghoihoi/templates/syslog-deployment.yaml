@@ -22,8 +22,8 @@ spec:
     spec:
       containers:
       - name: filebeat
-        image: ghcr.io/konchangakita/loghoi-syslog:{{ .Chart.AppVersion }}
-        imagePullPolicy: Always
+        image: "{{ .Values.image.syslog.repository }}:{{ .Values.image.syslog.tag }}"
+        imagePullPolicy: {{ .Values.image.syslog.pullPolicy }}
         ports:
         - containerPort: 7515
           name: syslog-tcp
