@@ -184,7 +184,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/loghoi-frontend
+          images: ghcr.io/konchangakita/loghoi-frontend
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-
@@ -258,7 +258,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/loghoi-syslog
+          images: ghcr.io/konchangakita/loghoi-syslog
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-
