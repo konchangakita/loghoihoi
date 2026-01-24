@@ -13,6 +13,9 @@ import { faFileLines } from '@fortawesome/free-solid-svg-icons'
 import { faGear } from '@fortawesome/free-solid-svg-icons'
 import { faFingerprint } from '@fortawesome/free-solid-svg-icons'
 import { faBarsStaggered } from '@fortawesome/free-solid-svg-icons'
+import { faCode } from '@fortawesome/free-solid-svg-icons'
+import { faBook } from '@fortawesome/free-solid-svg-icons'
+import { faChartLine } from '@fortawesome/free-solid-svg-icons'
 
 const Navbar = () => {
   const searchParams = useSearchParams()
@@ -24,6 +27,7 @@ const Navbar = () => {
   const [showCopied, setShowCopied] = useState(false)
   const [sshKey, setSshKey] = useState<string>('')
   const [isLoadingKey, setIsLoadingKey] = useState(false)
+  const [hostIp, setHostIp] = useState<string>('')
 
   // 外部からモーダルを開くイベントをリッスン
   useEffect(() => {
@@ -35,6 +39,13 @@ const Navbar = () => {
     
     return () => {
       window.removeEventListener(SSH_KEY_MODAL_EVENT, handleOpenModal)
+    }
+  }, [])
+
+  // クライアントサイドでHOST_IPを取得
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setHostIp(window.location.hostname)
     }
   }, [])
 
@@ -151,6 +162,27 @@ const Navbar = () => {
                     <FontAwesomeIcon icon={faGear} style={{ fontSize: '21px' }} />
                     Registration
                   </Link>
+                </li>
+                <li>
+                  <hr className="my-2 border-gray-300" />
+                </li>
+                <li>
+                  <a href={`http://${hostIp}:7776/docs`} target="_blank" rel="noopener noreferrer" className='hover:no-underline'>
+                    <FontAwesomeIcon icon={faCode} style={{ fontSize: '21px' }} />
+                    Swagger
+                  </a>
+                </li>
+                <li>
+                  <a href={`http://${hostIp}:7776/redoc`} target="_blank" rel="noopener noreferrer" className='hover:no-underline'>
+                    <FontAwesomeIcon icon={faBook} style={{ fontSize: '21px' }} />
+                    ReDoc
+                  </a>
+                </li>
+                <li>
+                  <a href={`http://${hostIp}:5601`} target="_blank" rel="noopener noreferrer" className='hover:no-underline'>
+                    <FontAwesomeIcon icon={faChartLine} style={{ fontSize: '21px' }} />
+                    Kibana
+                  </a>
                 </li>
               </ul>
             </div>
