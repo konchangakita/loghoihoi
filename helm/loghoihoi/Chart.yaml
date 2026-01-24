@@ -1,6 +1,6 @@
 apiVersion: v2
 name: loghoihoi
-description: Nutanixログほいほい - ログ収集・分析システムのHelm Chart（自動化CD対応）
+description: Nutanixログほいほい - ログ収集・分析システムのHelm Chart（統一パッケージプッシュ対応）
 type: application
 version: 0.1.0
 appVersion: v1.1.1

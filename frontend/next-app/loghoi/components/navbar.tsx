@@ -18,6 +18,7 @@ import { faBook } from '@fortawesome/free-solid-svg-icons'
 import { faChartLine } from '@fortawesome/free-solid-svg-icons'
 
 // CD Pipeline Test: フロントエンドイメージビルド確認用
+// 認証修正後のテスト: 統一パッケージプッシュ確認
 const Navbar = () => {
   const searchParams = useSearchParams()
   const pcip = searchParams.get('pcip')
