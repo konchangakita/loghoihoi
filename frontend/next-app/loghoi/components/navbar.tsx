@@ -17,6 +17,7 @@ import { faCode } from '@fortawesome/free-solid-svg-icons'
 import { faBook } from '@fortawesome/free-solid-svg-icons'
 import { faChartLine } from '@fortawesome/free-solid-svg-icons'
 
+// CD Pipeline Test: フロントエンドイメージビルド確認用
 const Navbar = () => {
   const searchParams = useSearchParams()
   const pcip = searchParams.get('pcip')
